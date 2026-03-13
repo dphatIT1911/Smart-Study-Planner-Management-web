@@ -115,7 +115,8 @@ vào Task tương ứng.
 
 \#\#\# 2\. Yêu cầu Phi chức năng
 
-\- \*\*Giao diện & Trải nghiệm (UI/UX):\*\* \- Thiết kế Responsive, tối ưu hiển thị trên cả Desktop và Tablet/Mobile.  
+\- \*\*Giao diện & Trải nghiệm (UI/UX):\*\*  
+  \- Thiết kế Responsive, tối ưu hiển thị trên cả Desktop và Tablet/Mobile.  
   \- Thao tác chuyển đổi trạng thái task phản hồi nhanh chóng (dưới 0.5 giây).  
 \- \*\*Bảo mật:\*\*  
   \- Mật khẩu phải được hash bằng \`bcrypt\` trước khi lưu vào Database.  
@@ -209,12 +210,12 @@ graph TD
 \`\`\`  
 \---
 
-\#\#\# 6\. Use case diagram  
+\#\#\# 5\. Use case diagram  
 \!\[\](https://raw.githubusercontent.com/dphatIT1911/Smart-Study-Planner-Management-web/refs/heads/develop/images/use-case-study-planner.png)
 
 \---
 
-\#\#\# 5\. Công nghệ sử dụng (Tech Stack)
+\#\#\# 6\. Công nghệ sử dụng (Tech Stack)
 
 \- \*\*Frontend:\*\* ReactJS, Tailwind, PrimeReact, PrimeIcon  
 \- \*\*Backend:\*\* Python (FastAPI)  
@@ -243,7 +244,8 @@ Quá trình kiểm thử sẽ tập trung vào tính toàn vẹn dữ liệu và
 | \*\*TC-03\*\* | Task Link | Tạo Task nhưng không chọn thuộc về Môn học nào. | Cảnh báo yêu cầu chọn môn học hoặc tự động gán vào mục "General". |  
 | \*\*TC-04\*\* | Pomodoro | Chạy bộ đếm 25 phút đến khi kết thúc (00:00). | Nút "Hoàn thành phiên" hiện ra. Sau khi xác nhận, thời gian thực tế (\`actual\_minutes\`) của Task được cộng thêm 25\. |  
 | \*\*TC-05\*\* | Lịch học | Đổi trạng thái Task từ "To-do" sang "Done" trên bảng chi tiết. | Lịch học lập tức cập nhật màu sắc/trạng thái của Task đó mà không cần F5 (Reload) trang. |  
-\- \*\*Unit Testing:\*\* \- Viết các Unit Test (sử dụng PyTest) cho các API Endpoints và Logic nghiệp vụ cốt lõi.  
+\- \*\*Unit Testing:\*\*  
+  \- Viết các Unit Test (sử dụng PyTest) cho các API Endpoints và Logic nghiệp vụ cốt lõi.  
   \- \*Các Test Case tiêu biểu:\* Kiểm tra thuật toán băm mật khẩu, validate định dạng email/password, test logic cộng dồn thời gian (actual\_minutes) của Pomodoro, và kiểm tra các ràng buộc cơ sở dữ liệu (VD: Không thể xóa môn học nếu vẫn còn task đang active).
 
 \*\*3. Những chức năng dự trù thực hiện ở Phase kế tiếp\*\*  
@@ -258,9 +260,11 @@ Sau khi chốt xong MVP, nhóm sẽ tiến hành phát triển các tính năng 
 \#\#\# Beta Version  
 \*\*Thời hạn hoàn thành dự kiến:\*\* 10.05.2026
 
-\- \*\*Kết quả kiểm thử:\*\* \- Báo cáo tổng hợp độ phủ (Code Coverage) của Unit Test Backend (mục tiêu đạt \>70% cho các controller chính).  
+\- \*\*Kết quả kiểm thử:\*\*  
+  \- Báo cáo tổng hợp độ phủ (Code Coverage) của Unit Test Backend (mục tiêu đạt \>70% cho các controller chính).  
   \- Bảng danh sách các lỗi phát hiện trong quá trình Manual Test UI ở phase MVP và tình trạng đã khắc phục.  
-\- \*\*Viết báo cáo:\*\* \- Hoàn thiện tài liệu Hướng dẫn sử dụng.  
+\- \*\*Viết báo cáo:\*\*  
+  \- Hoàn thiện tài liệu Hướng dẫn sử dụng.  
   \- Viết báo cáo tổng kết Đồ án cuối kỳ, phân tích những điểm làm được, chưa làm được và hướng phát triển tương lai.
 
 \#\# CÂU HỎI
