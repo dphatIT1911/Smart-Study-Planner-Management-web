@@ -10,7 +10,9 @@ def create_app() -> FastAPI:
     """Initialize the FastAPI application."""
     
     # Create tables (For production with Alembic, better to remove this and use migrations)
-    Base.metadata.create_all(bind=engine)
+    import os
+    if not os.getenv("TESTING"):
+        Base.metadata.create_all(bind=engine)
 
     app = FastAPI(
         title="Smart Study Planner API",
@@ -18,6 +20,10 @@ def create_app() -> FastAPI:
         version="1.0.0",
     )
     
+    # Middleware
+    from app.core.middleware import AuthMiddleware
+    app.add_middleware(AuthMiddleware)
+
     # Include all API routers
     app.include_router(api_router, prefix="")
 
