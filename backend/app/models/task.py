@@ -1,21 +1,41 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+import enum
+from datetime import datetime
+from typing import List, Optional
+
+from sqlalchemy import ForeignKey, String, Text, DateTime, Integer, Enum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.models.base import Base
+
+class TaskStatus(enum.Enum):
+    TODO = "To-do"
+    IN_PROGRESS = "In-progress"
+    DONE = "Done"
+
+class TaskPriority(enum.Enum):
+    LOW = "Low"
+    MED = "Med"
+    HIGH = "High"
 
 class Task(Base):
     __tablename__ = "tasks"
 
-    id = Column(Integer, primary_key=True, index=True)
-    subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    title = Column(String)
-    description = Column(Text)
-    status = Column(String, default="To-do")
-    priority = Column(String, default="Med")
-    due_date = Column(DateTime)
-    estimated_minutes = Column(Integer, default=0)
-    actual_minutes = Column(Integer, default=0)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    subject_id: Mapped[Optional[int]] = mapped_column(ForeignKey("subjects.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    
+    title: Mapped[str] = mapped_column(String(100))
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    status: Mapped[TaskStatus] = mapped_column(Enum(TaskStatus), default=TaskStatus.TODO)
+    priority: Mapped[TaskPriority] = mapped_column(Enum(TaskPriority), default=TaskPriority.MED)
+    
+    due_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    estimated_minutes: Mapped[int] = mapped_column(Integer, default=0)
+    actual_minutes: Mapped[int] = mapped_column(Integer, default=0)
 
-    user = relationship("User", back_populates="tasks")
-    subject = relationship("Subject", back_populates="tasks")
-    study_sessions = relationship("StudySession", back_populates="task")
+    # Relationships
+    user: Mapped["User"] = relationship(back_populates="tasks")
+    subject: Mapped[Optional["Subject"]] = relationship(back_populates="tasks")
+    study_sessions: Mapped[List["StudySession"]] = relationship(
+        back_populates="task", cascade="all, delete-orphan"
+    )

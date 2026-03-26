@@ -1,14 +1,19 @@
-from sqlalchemy import Column, Integer, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from datetime import datetime
+
+from sqlalchemy import ForeignKey, DateTime, Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.models.base import Base
 
 class StudySession(Base):
     __tablename__ = "study_sessions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    task_id = Column(Integer, ForeignKey("tasks.id"))
-    start_time = Column(DateTime)
-    end_time = Column(DateTime)
-    duration_minutes = Column(Integer)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"))
+    
+    start_time: Mapped[datetime] = mapped_column(DateTime)
+    end_time: Mapped[datetime] = mapped_column(DateTime)
+    duration_minutes: Mapped[int] = mapped_column(Integer)
 
-    task = relationship("Task", back_populates="study_sessions")
+    # Relationships
+    task: Mapped["Task"] = relationship(back_populates="study_sessions")
