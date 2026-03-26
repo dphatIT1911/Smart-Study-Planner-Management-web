@@ -1,9 +1,9 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Union
 from datetime import date
 
 class AnalyticsDataPoint(BaseModel):
-    period: date | str
+    period: Union[date, str]
     total_minutes: int
 
 class AnalyticsSummaryResponse(BaseModel):
