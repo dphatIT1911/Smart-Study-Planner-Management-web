@@ -40,6 +40,6 @@ class CRUDTask(CRUDBase[Task, TaskCreate, TaskUpdate]):
             
         # Access enum value correctly
         status_value = task.status.value if hasattr(task.status, 'value') else task.status
-        return status_value != "Done" and task.due_date < now
+        return status_value != "DONE" and task.due_date < now
         
 task_service = CRUDTask(Task)
