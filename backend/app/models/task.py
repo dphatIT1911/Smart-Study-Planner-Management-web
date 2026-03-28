@@ -7,15 +7,15 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
-class TaskStatus(enum.Enum):
-    TODO = "To-do"
-    IN_PROGRESS = "In-progress"
-    DONE = "Done"
+class TaskStatus(str, enum.Enum):
+    TODO = "TODO"
+    IN_PROGRESS = "IN_PROGRESS"
+    DONE = "DONE"
 
-class TaskPriority(enum.Enum):
-    LOW = "Low"
-    MED = "Med"
-    HIGH = "High"
+class TaskPriority(str, enum.Enum):
+    LOW = "LOW"
+    MED = "MED"
+    HIGH = "HIGH"
 
 class Task(Base):
     __tablename__ = "tasks"

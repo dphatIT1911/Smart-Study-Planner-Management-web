@@ -1,0 +1,104 @@
+from typing import Any, List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_db, get_current_user
+from app.models.user import User
+from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskStatus
+from app.services.task import task_service
+
+router = APIRouter()
+
+@router.get("/", response_model=List[TaskResponse])
+def read_tasks(
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+    status: Optional[TaskStatus] = None,
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Retrieve tasks.
+    """
+    tasks = task_service.get_multi_by_owner(
+        db=db, user_id=current_user.id, skip=skip, limit=limit, status=status
+    )
+    # The response_model TaskResponse expects 'is_overdue'.
+    for task in tasks:
+        task.is_overdue = task_service.is_overdue(task)
+    return tasks
+
+@router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
+def create_task(
+    *,
+    db: Session = Depends(get_db),
+    task_in: TaskCreate,
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Create new task.
+    """
+    # Force the user_id from the login token
+    if task_in.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to create a task for another user")
+        
+    task = task_service.create_with_owner(db=db, obj_in=task_in, user_id=current_user.id)
+    task.is_overdue = task_service.is_overdue(task)
+    return task
+
+@router.get("/{id}", response_model=TaskResponse)
+def read_task(
+    *,
+    db: Session = Depends(get_db),
+    id: int,
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Get task by ID.
+    """
+    task = task_service.get(db=db, id=id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    task.is_overdue = task_service.is_overdue(task)
+    return task
+
+@router.patch("/{id}", response_model=TaskResponse)
+def update_task(
+    *,
+    db: Session = Depends(get_db),
+    id: int,
+    task_in: TaskUpdate,
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Update a task.
+    """
+    task = task_service.get(db=db, id=id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    task = task_service.update(db=db, db_obj=task, obj_in=task_in)
+    task.is_overdue = task_service.is_overdue(task)
+    return task
+
+@router.delete("/{id}", response_model=TaskResponse)
+def delete_task(
+    *,
+    db: Session = Depends(get_db),
+    id: int,
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Delete a task.
+    """
+    task = task_service.get(db=db, id=id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    task = task_service.remove(db=db, id=id)
+    task.is_overdue = task_service.is_overdue(task)
+    return task
