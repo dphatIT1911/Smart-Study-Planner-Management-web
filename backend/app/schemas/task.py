@@ -4,14 +4,14 @@ from datetime import datetime
 from enum import Enum
 
 class TaskStatus(str, Enum):
-    TODO = "To-do"
-    IN_PROGRESS = "In-progress"
-    DONE = "Done"
+    TODO = "TODO"
+    IN_PROGRESS = "IN_PROGRESS"
+    DONE = "DONE"
 
 class TaskPriority(str, Enum):
-    LOW = "Low"
-    MED = "Med"
-    HIGH = "High"
+    LOW = "LOW"
+    MED = "MED"
+    HIGH = "HIGH"
 
 class TaskBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=100)
