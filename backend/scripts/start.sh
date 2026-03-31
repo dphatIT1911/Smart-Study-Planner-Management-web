@@ -3,5 +3,5 @@
 # Thoat ngay neu co loi
 set -e
 
-echo "--- Starting Gunicorn Server ---"
-exec gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:${PORT:-8000}
+echo "--- Starting Uvicorn Server ---"
+exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
