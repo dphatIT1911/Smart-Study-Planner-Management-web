@@ -6,43 +6,43 @@ import { Plus, Clock, Calendar, TrendingUp } from 'lucide-react';
 const sessions = [
 {
   id: '1',
-  subject: 'Advanced Mathematics',
+  subject: 'Toán Cao Cấp',
   subjectColor: '#6366f1',
-  date: 'Mar 25, 2026',
-  startTime: '2:00 PM',
-  endTime: '3:25 PM',
+  date: '25 Th03, 2026',
+  startTime: '14:00',
+  endTime: '15:25',
   durationMinutes: 85,
-  notes: 'Completed calculus problems, focused on integration techniques.'
+  notes: 'Hoàn thành bài tập giải tích, tập trung vào kỹ thuật tích phân.'
 },
 {
   id: '2',
-  subject: 'Data Structures',
+  subject: 'Cấu Trúc Dữ Liệu',
   subjectColor: '#8b5cf6',
-  date: 'Mar 24, 2026',
-  startTime: '10:00 AM',
-  endTime: '12:00 PM',
+  date: '24 Th03, 2026',
+  startTime: '10:00',
+  endTime: '12:00',
   durationMinutes: 120,
-  notes: 'Implemented binary search tree with insertion and deletion operations.'
+  notes: 'Đã cài đặt cây tìm kiếm nhị phân với các thao tác thêm và xóa.'
 },
 {
   id: '3',
-  subject: 'Web Development',
+  subject: 'Phát Triển Web',
   subjectColor: '#ec4899',
-  date: 'Mar 23, 2026',
-  startTime: '3:00 PM',
-  endTime: '4:30 PM',
+  date: '23 Th03, 2026',
+  startTime: '15:00',
+  endTime: '16:30',
   durationMinutes: 90,
-  notes: 'Built responsive navigation component using Tailwind CSS.'
+  notes: 'Đã xây dựng UI thanh điều hướng tương thích bằng Tailwind CSS.'
 },
 {
   id: '4',
-  subject: 'Database Systems',
+  subject: 'Hệ Quản Trị CSDL',
   subjectColor: '#14b8a6',
-  date: 'Mar 22, 2026',
-  startTime: '1:00 PM',
-  endTime: '2:15 PM',
+  date: '22 Th03, 2026',
+  startTime: '13:00',
+  endTime: '14:15',
   durationMinutes: 75,
-  notes: 'Practiced SQL joins and subqueries.'
+  notes: 'Thực hành các câu lệnh thao tác kết nối JOIN và truy vấn lồng SQL.'
 }];
 
 
@@ -57,12 +57,12 @@ export default function StudySessions() {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Study Sessions</h1>
-          <p className="text-gray-600 mt-2">Track your study time and productivity</p>
+          <h1 className="text-3xl font-bold text-gray-900">Phiên học</h1>
+          <p className="text-gray-600 mt-2">Theo dõi thời gian học và năng suất của bạn</p>
         </div>
         <Button className="bg-indigo-600 hover:bg-indigo-700 gap-2">
           <Plus className="w-4 h-4" />
-          Log Session
+          Ghi lại phiên học
         </Button>
       </div>
 
@@ -71,45 +71,45 @@ export default function StudySessions() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              This Week
+              Tuần này
             </CardTitle>
             <Clock className="w-4 h-4 text-indigo-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {weeklyStats.totalMinutes} min
+              {weeklyStats.totalMinutes} phút
             </div>
-            <p className="text-xs text-gray-500 mt-1">Total study time</p>
+            <p className="text-xs text-gray-500 mt-1">Tổng thời gian học</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Daily Average
+              Trung bình mỗi ngày
             </CardTitle>
             <TrendingUp className="w-4 h-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {weeklyStats.averagePerDay} min
+              {weeklyStats.averagePerDay} phút
             </div>
-            <p className="text-xs text-gray-500 mt-1">Per day</p>
+            <p className="text-xs text-gray-500 mt-1">Mỗi ngày</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Longest Session
+              Phiên học dài nhất
             </CardTitle>
             <Clock className="w-4 h-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {weeklyStats.longestSession} min
+              {weeklyStats.longestSession} phút
             </div>
-            <p className="text-xs text-gray-500 mt-1">This week</p>
+            <p className="text-xs text-gray-500 mt-1">Tuần này</p>
           </CardContent>
         </Card>
       </div>
@@ -153,7 +153,7 @@ export default function StudySessions() {
                       color: session.subjectColor
                     }}>
                     
-                      {session.durationMinutes} min
+                      {session.durationMinutes} phút
                     </Badge>
                   </div>
                   {session.notes &&

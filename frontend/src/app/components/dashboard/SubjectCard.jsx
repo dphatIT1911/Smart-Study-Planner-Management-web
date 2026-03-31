@@ -31,13 +31,13 @@ export default function SubjectCard({ name, semester, color, targetScore, curren
       <CardContent className="space-y-3">
         <div>
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-600">Progress to Target</span>
+            <span className="text-gray-600">Tiến độ đạt mục tiêu</span>
             <span className="font-medium text-gray-900">{currentProgress}%</span>
           </div>
           <Progress value={currentProgress} className="h-2" />
         </div>
         <div className="flex justify-between text-xs text-gray-500">
-          <span>Target Score</span>
+          <span>Điểm mục tiêu</span>
           <span className="font-medium">{targetScore}</span>
         </div>
       </CardContent>
