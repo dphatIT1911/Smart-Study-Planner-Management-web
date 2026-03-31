@@ -21,5 +21,5 @@ RUN chmod +x scripts/start.sh
 # Khai báo port FastAPI chạy (Render/Railway sẽ tự động bind)
 EXPOSE 8000
 
-# Chạy app thông qua start.sh
-CMD ["./scripts/start.sh"]
+# Chạy app thông qua start.sh phối hợp với sh
+CMD ["sh", "/app/scripts/start.sh"]
