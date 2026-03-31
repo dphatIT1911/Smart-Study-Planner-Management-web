@@ -21,8 +21,26 @@ def create_app() -> FastAPI:
     )
     
     # Middleware
+    from fastapi.middleware.cors import CORSMiddleware
     from app.core.middleware import AuthMiddleware
+
+    # AuthMiddleware is added first (inner)
     app.add_middleware(AuthMiddleware)
+
+    # CORSMiddleware is added second (outer) to wrap AuthMiddleware and handle CORS first
+    # Note: If allow_origins=["*"], allow_credentials must be False.
+    cors_origins = [str(origin).rstrip("/") for origin in settings.BACKEND_CORS_ORIGINS]
+    allow_credentials = True
+    if "*" in cors_origins:
+        allow_credentials = False
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=allow_credentials,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     # Include all API routers
     app.include_router(api_router, prefix="")

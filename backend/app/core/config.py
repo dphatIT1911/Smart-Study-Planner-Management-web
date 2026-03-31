@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     EMAILS_FROM_EMAIL: str = Field("info@smartstudy.com", description="From email address")
     EMAILS_FROM_NAME: str = Field("Smart Study Planner", description="From email name")
 
+    # CORS Settings
+    BACKEND_CORS_ORIGINS: list[str] = ["*"]
+
     # This will load the variables from .env if present
     model_config = SettingsConfigDict(
         env_file=".env",
