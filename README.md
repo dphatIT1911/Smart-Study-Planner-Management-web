@@ -4,7 +4,7 @@ A web-based study planner system that helps students manage subjects, schedules,
 ### 1. Khởi tạo & Kích hoạt Môi trường ảo
 **Bước 1:** Khởi tạo môi trường ảo `.venv`
 ```bash
-python -m venv .venv
+py -3.12 -m venv .venv
 ```
 **Bước 2:** Kích hoạt môi trường vừa tạo
 - Cách kích hoạt trên **Windows (PowerShell)**:
