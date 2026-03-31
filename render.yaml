@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: smart-study-backend
+    runtime: docker
+    plan: free
+    region: singapore # Chọn khu vực gần Việt Nam để tốc độ nhanh hơn
+    rootDir: backend # Chỉ định Render làm việc trong thư mục backend
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Bạn sẽ dán URL Database của mình vào dashboard Render
+      - key: SECRET_KEY
+        generateValue: true # Render sẽ tự động sinh mã bí mật cho bạn
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "10080" # 7 days
+      - key: PORT
+        value: "8000"

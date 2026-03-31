@@ -15,8 +15,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy toàn bộ mã nguồn vào thư mục làm việc /app
 COPY . .
 
-# Khai báo port FastAPI chạy
+# Đảm bảo scripts/start.sh có thể thực thi được
+RUN chmod +x scripts/start.sh
+
+# Khai báo port FastAPI chạy (Render/Railway sẽ tự động bind)
 EXPOSE 8000
 
-# Lệnh khởi chạy server FastAPI bằng uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Chạy app thông qua start.sh
+CMD ["./scripts/start.sh"]
