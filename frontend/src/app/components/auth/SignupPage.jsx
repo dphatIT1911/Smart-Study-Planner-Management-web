@@ -29,7 +29,7 @@ export default function SignupPage() {
 
     try {
       if (!name || !email || !password) {
-        throw new Error('All fields are required');
+        throw new Error('Vui lòng điền đầy đủ các thông tin');
       }
 
       await api.register({
@@ -41,7 +41,7 @@ export default function SignupPage() {
 
       navigate('/login');
     } catch (err) {
-      setError(err.message || 'Registration failed. Try a different email.');
+      setError(err.message || 'Đăng ký thất bại. Email có thể đã tồn tại.');
     } finally {
       setLoading(false);
     }
@@ -54,8 +54,8 @@ export default function SignupPage() {
           <div className="mx-auto w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
-          <CardTitle className="text-2xl">Create your account</CardTitle>
-          <CardDescription>Start organizing your study schedule today</CardDescription>
+          <CardTitle className="text-2xl">Tạo tài khoản</CardTitle>
+          <CardDescription>Bắt đầu lên kế hoạch học tập ngay hôm nay</CardDescription>
         </CardHeader>
         <form onSubmit={handleSignup}>
           <CardContent className="space-y-4">
@@ -66,11 +66,11 @@ export default function SignupPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">Họ và tên</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="John Doe"
+                placeholder="Ví dụ: Nguyễn Văn A"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={loading}
@@ -91,11 +91,11 @@ export default function SignupPage() {
               
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Mật khẩu</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Minimum 8 characters"
+                placeholder="Tối thiểu 8 ký tự"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
@@ -104,7 +104,7 @@ export default function SignupPage() {
               
             </div>
             <div className="space-y-2">
-              <Label htmlFor="timezone">Timezone</Label>
+              <Label htmlFor="timezone">Múi giờ</Label>
               <Select value={timezone} onValueChange={setTimezone} disabled={loading}>
                 <SelectTrigger id="timezone">
                   <SelectValue />
@@ -125,12 +125,12 @@ export default function SignupPage() {
               className="w-full bg-indigo-600 hover:bg-indigo-700 h-11"
               disabled={loading}
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Tạo tài khoản'}
             </Button>
             <p className="text-sm text-center text-gray-600">
-              Already have an account?{' '}
+              Đã có tài khoản?{' '}
               <Link to="/login" className="text-indigo-600 hover:underline">
-                Sign in
+                Đăng nhập ngay
               </Link>
             </p>
           </CardFooter>
@@ -138,4 +138,4 @@ export default function SignupPage() {
       </Card>
     </div>);
 
-}
+}

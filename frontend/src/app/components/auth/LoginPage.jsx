@@ -21,7 +21,7 @@ export default function LoginPage() {
 
     try {
       if (!email || !password) {
-        throw new Error('Email and password are required');
+        throw new Error('Vui lòng nhập Email và Mật khẩu');
       }
 
       const formData = new FormData();
@@ -36,7 +36,7 @@ export default function LoginPage() {
       
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
     } finally {
       setLoading(false);
     }
@@ -49,8 +49,8 @@ export default function LoginPage() {
           <div className="mx-auto w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your Study Planner account</CardDescription>
+          <CardTitle className="text-2xl">Chào mừng trở lại</CardTitle>
+          <CardDescription>Đăng nhập vào tài khoản Study Planner của bạn</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
@@ -73,7 +73,7 @@ export default function LoginPage() {
               
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Mật khẩu</Label>
               <Input
                 id="password"
                 type="password"
@@ -94,16 +94,16 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Verifying...
+                  Đang xác thực...
                 </>
               ) : (
-                'Sign In'
+                'Đăng nhập'
               )}
             </Button>
             <p className="text-sm text-center text-gray-600">
-              Don't have an account?{' '}
+              Chưa có tài khoản?{' '}
               <Link to="/signup" className="text-indigo-600 hover:underline">
-                Sign up
+                Đăng ký ngay
               </Link>
             </p>
           </CardFooter>
@@ -111,4 +111,4 @@ export default function LoginPage() {
       </Card>
     </div>);
 
-}
+}

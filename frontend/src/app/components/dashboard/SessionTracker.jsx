@@ -19,13 +19,13 @@ export default function SessionTracker({ recentSession }) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Recent Study Session</CardTitle>
+          <CardTitle>Phiên học gần đây</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-gray-500">
             <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p>No study sessions yet</p>
-            <p className="text-sm mt-1">Start tracking your study time!</p>
+            <p>Chưa có phiên học nào</p>
+            <p className="text-sm mt-1">Bắt đầu theo dõi thời gian học của bạn!</p>
           </div>
         </CardContent>
       </Card>);
@@ -35,7 +35,7 @@ export default function SessionTracker({ recentSession }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Study Session</CardTitle>
+        <CardTitle>Phiên học gần đây</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -57,7 +57,7 @@ export default function SessionTracker({ recentSession }) {
               <div className="text-2xl font-bold text-gray-900">
                 {recentSession.durationMinutes}
               </div>
-              <div className="text-xs text-gray-500">minutes</div>
+              <div className="text-xs text-gray-500">phút</div>
             </div>
           </div>
           {recentSession.notes &&

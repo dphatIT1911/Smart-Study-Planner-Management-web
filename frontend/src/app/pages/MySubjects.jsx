@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
-import { Plus, BookOpen, Loader2, X } from 'lucide-react';
+import { Plus, BookOpen, Loader2 } from 'lucide-react';
 import { api } from '../api';
 import {
   Dialog,
@@ -14,6 +14,7 @@ import {
 } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Badge } from '../components/ui/badge';
 
 export default function MySubjects() {
   const [subjects, setSubjects] = useState([]);
@@ -27,7 +28,7 @@ export default function MySubjects() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newSubject, setNewSubject] = useState({
     name: '',
-    semester: 'Spring 2026',
+    semester: 'HK2-2025',
     credits: 3,
     target_score: 8.5,
     color: '#6366f1'
@@ -45,7 +46,7 @@ export default function MySubjects() {
       setError(null);
     } catch (err) {
       console.error('Failed to fetch data:', err);
-      setError('Unable to load data. Please check your connection.');
+      setError('Không thể tải dữ liệu. Vui lòng kiểm tra kết nối.');
     } finally {
       setLoading(false);
     }
@@ -65,7 +66,7 @@ export default function MySubjects() {
     try {
       setIsSubmitting(true);
       const user = JSON.parse(localStorage.getItem('user'));
-      if (!user?.id) throw new Error("User session not found");
+      if (!user?.id) throw new Error("Phiên đăng nhập hết hạn");
 
       await api.subjects.create({
         ...newSubject,
@@ -77,14 +78,14 @@ export default function MySubjects() {
       setIsModalOpen(false);
       setNewSubject({
         name: '',
-        semester: 'Spring 2026',
+        semester: 'HK2-2025',
         credits: 3,
         target_score: 8.5,
         color: '#6366f1'
       });
       await fetchData();
     } catch (err) {
-      alert(err.message || "Failed to create subject");
+      alert(err.message || "Không thể thêm môn học");
     } finally {
       setIsSubmitting(false);
     }
@@ -105,7 +106,7 @@ export default function MySubjects() {
     return (
       <div className="flex flex-col items-center justify-center h-96 gap-4">
         <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-        <p className="text-gray-500 font-medium italic">Loading your study plan...</p>
+        <p className="text-gray-500 font-medium italic">Đang tải kế hoạch học tập...</p>
       </div>
     );
   }
@@ -114,10 +115,10 @@ export default function MySubjects() {
     return (
       <div className="p-8 max-w-7xl mx-auto text-center">
         <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-xl">
-          <h2 className="text-xl font-bold mb-2">Oops!</h2>
+          <h2 className="text-xl font-bold mb-2">Lỗi!</h2>
           <p>{error}</p>
           <Button onClick={() => window.location.reload()} variant="outline" className="mt-4 border-red-300 hover:bg-red-100">
-            Try Again
+            Thử lại
           </Button>
         </div>
       </div>
@@ -128,15 +129,15 @@ export default function MySubjects() {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Subjects</h1>
-          <p className="text-gray-600 mt-2">Manage your courses and track progress</p>
+          <h1 className="text-3xl font-bold text-gray-900">Môn học của tôi</h1>
+          <p className="text-gray-600 mt-2">Quản lý khóa học và theo dõi tiến độ</p>
         </div>
         <Button 
           className="bg-indigo-600 hover:bg-indigo-700 gap-2"
           onClick={() => setIsModalOpen(true)}
         >
           <Plus className="w-4 h-4" />
-          Add Subject
+          Thêm môn học
         </Button>
       </div>
 
@@ -147,8 +148,8 @@ export default function MySubjects() {
               <BookOpen className="w-8 h-8 text-gray-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">No subjects yet</h3>
-              <p className="text-gray-500 mt-1 max-w-sm">Start your journey by adding your first subject to track your progress effectively.</p>
+              <h3 className="text-lg font-semibold text-gray-900">Chưa có môn học nào</h3>
+              <p className="text-gray-500 mt-1 max-w-sm">Hãy thêm môn học đầu tiên để bắt đầu theo dõi tiến độ học tập của bạn.</p>
             </div>
             <Button 
               size="lg" 
@@ -156,7 +157,7 @@ export default function MySubjects() {
               onClick={() => setIsModalOpen(true)}
             >
               <Plus className="w-4 h-4" />
-              Add First Subject
+              Thêm môn học đầu tiên
             </Button>
           </div>
         </Card>
@@ -188,18 +189,18 @@ export default function MySubjects() {
                  <CardContent className="space-y-4">
                    <div className="grid grid-cols-2 gap-4 text-sm">
                      <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                       <p className="text-gray-400 text-xs font-bold uppercase mb-1">Status</p>
-                       <p className="font-semibold text-gray-700">Active</p>
+                       <p className="text-gray-400 text-xs font-bold uppercase mb-1">Trạng thái</p>
+                       <p className="font-semibold text-gray-700">Đang học</p>
                      </div>
                      <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                       <p className="text-gray-400 text-xs font-bold uppercase mb-1">Credits</p>
+                       <p className="text-gray-400 text-xs font-bold uppercase mb-1">Tín chỉ</p>
                        <p className="font-semibold text-gray-700">{subject.credits}</p>
                      </div>
                    </div>
                    
                    <div>
                      <div className="flex justify-between text-sm mb-2">
-                       <span className="text-gray-500 font-medium">Study Completion</span>
+                       <span className="text-gray-500 font-medium">Tiến độ đạt mục tiêu</span>
                        <span className="font-bold text-gray-900">{progress}%</span>
                      </div>
                      <Progress value={progress} className="h-2.5 bg-gray-100" />
@@ -207,7 +208,7 @@ export default function MySubjects() {
 
                    <div className="flex justify-between items-center pt-4 border-t border-gray-50 mt-2">
                      <div className="text-sm flex items-center gap-2">
-                       <span className="text-gray-400 font-medium">Target: </span>
+                       <span className="text-gray-400 font-medium">Mục tiêu: </span>
                        <span className="font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-base">{subject.target_score}</span>
                      </div>
                      <Button 
@@ -216,7 +217,7 @@ export default function MySubjects() {
                        className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-semibold gap-1"
                        onClick={() => handleOpenDetails(subject)}
                      >
-                       Details 
+                       Chi tiết 
                      </Button>
                    </div>
                  </CardContent>
@@ -231,36 +232,36 @@ export default function MySubjects() {
         <DialogContent className="sm:max-w-[425px]">
           <form onSubmit={handleCreateSubject}>
             <DialogHeader>
-              <DialogTitle>Add New Subject</DialogTitle>
+              <DialogTitle>Thêm môn học mới</DialogTitle>
               <DialogDescription>
-                Fill in the details to start tracking a new subject.
+                Nhập thông tin chi tiết để bắt đầu theo dõi môn học mới.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Name</Label>
+                <Label htmlFor="name" className="text-right">Tên môn</Label>
                 <Input
                   id="name"
                   value={newSubject.name}
                   onChange={(e) => setNewSubject({...newSubject, name: e.target.value})}
                   className="col-span-3"
-                  placeholder="e.g. Advanced Mathematics"
+                  placeholder="Ví dụ: Toán Cao Cấp"
                   required
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="semester" className="text-right">Semester</Label>
+                <Label htmlFor="semester" className="text-right">Học kỳ</Label>
                 <Input
                   id="semester"
                   value={newSubject.semester}
                   onChange={(e) => setNewSubject({...newSubject, semester: e.target.value})}
                   className="col-span-3"
-                  placeholder="e.g. Spring 2026"
+                  placeholder="Ví dụ: HK2-2025"
                   required
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="credits" className="text-right">Credits</Label>
+                <Label htmlFor="credits" className="text-right">Tín chỉ</Label>
                 <Input
                   id="credits"
                   type="number"
@@ -273,7 +274,7 @@ export default function MySubjects() {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="target" className="text-right">Target GPA</Label>
+                <Label htmlFor="target" className="text-right">Mục tiêu</Label>
                 <Input
                   id="target"
                   type="number"
@@ -287,7 +288,7 @@ export default function MySubjects() {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="color" className="text-right">Color</Label>
+                <Label htmlFor="color" className="text-right">Màu sắc</Label>
                 <div className="col-span-3 flex gap-2">
                   <Input
                     id="color"
@@ -312,11 +313,11 @@ export default function MySubjects() {
                 onClick={() => setIsModalOpen(false)}
                 disabled={isSubmitting}
               >
-                Cancel
+                Hủy
               </Button>
               <Button type="submit" className="bg-indigo-600" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                Add Subject
+                Thêm môn học
               </Button>
             </DialogFooter>
           </form>
@@ -337,36 +338,36 @@ export default function MySubjects() {
               <DialogTitle className="text-2xl">{selectedSubject?.name}</DialogTitle>
             </div>
             <DialogDescription>
-              Detailed view and tasks for {selectedSubject?.semester}
+              Xem chi tiết và danh sách công việc của {selectedSubject?.semester}
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-6 space-y-6">
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-center">
-                <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Credits</p>
+                <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Tín chỉ</p>
                 <p className="text-xl font-bold text-gray-800">{selectedSubject?.credits}</p>
               </div>
               <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-center">
-                <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Target</p>
+                <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Mục tiêu</p>
                 <p className="text-xl font-bold text-indigo-600">{selectedSubject?.target_score}</p>
               </div>
               <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-center">
-                <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Progress</p>
+                <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Tiến độ</p>
                 <p className="text-xl font-bold text-green-600">{calculateProgress(selectedSubject?.id)}%</p>
               </div>
             </div>
 
             <div>
               <h3 className="font-bold text-gray-900 mb-4 flex items-center justify-between">
-                Associated Tasks
-                <span className="text-xs font-normal text-gray-400">{getSubjectTasks(selectedSubject?.id).length} tasks total</span>
+                Danh sách công việc
+                <span className="text-xs font-normal text-gray-400">Tổng cộng {getSubjectTasks(selectedSubject?.id).length} task</span>
               </h3>
               
               <div className="space-y-3">
                 {getSubjectTasks(selectedSubject?.id).length === 0 ? (
                   <p className="text-sm text-gray-400 italic py-4 text-center bg-gray-50 rounded-lg border border-dashed">
-                    No tasks added for this subject yet.
+                    Chưa có công việc nào cho môn học này.
                   </p>
                 ) : (
                   getSubjectTasks(selectedSubject?.id).map(task => (
@@ -377,7 +378,7 @@ export default function MySubjects() {
                           <p className={`text-sm font-semibold ${task.status === 'DONE' ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
                             {task.title}
                           </p>
-                          <p className="text-[10px] text-gray-400 uppercase font-bold">{task.priority} Priority</p>
+                          <p className="text-[10px] text-gray-400 uppercase font-bold">Độ ưu tiên: {task.priority}</p>
                         </div>
                       </div>
                       <Badge variant="outline" className="text-[10px]">
@@ -391,16 +392,15 @@ export default function MySubjects() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>Close</Button>
+            <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>Đóng</Button>
             <Button className="bg-indigo-600" onClick={() => {
               setIsDetailsOpen(false);
-              // Navigate or open add task modal logic could go here
             }}>
-              Go to Task List
+              Đi tới danh sách Task
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
-}
+}

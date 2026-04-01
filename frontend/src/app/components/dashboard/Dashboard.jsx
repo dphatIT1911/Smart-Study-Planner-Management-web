@@ -22,20 +22,12 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        console.log('Fetching dashboard data...');
-        
-        // Fetch all necessary data in parallel
+        // Fetch all necessary data in parallel from REAL API
         const [allSubjects, allTasks, allSessions] = await Promise.all([
           api.subjects.getAll().catch(err => { console.error('Subjects fetch error:', err); return []; }),
           api.tasks.getAll().catch(err => { console.error('Tasks fetch error:', err); return []; }),
           api.sessions.getAll().catch(err => { console.error('Sessions fetch error:', err); return []; })
         ]);
-
-        console.log('Dashboard Data Received:', {
-          subjects: allSubjects,
-          tasks: allTasks,
-          sessions: allSessions
-        });
 
         // Calculate statistics manually from the real data
         const totalMinutes = Array.isArray(allSessions) ? allSessions.reduce((acc, s) => acc + (s.duration_minutes || 0), 0) : 0;
@@ -67,7 +59,7 @@ export default function Dashboard() {
     return (
       <div className="flex flex-col items-center justify-center h-screen -mt-20 gap-4">
         <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
-        <p className="text-gray-500 font-bold text-lg tracking-tight uppercase">Synthesizing your progress...</p>
+        <p className="text-gray-500 font-bold text-lg tracking-tight uppercase">Đang tổng hợp tiến độ của bạn...</p>
       </div>
     );
   }
@@ -80,37 +72,37 @@ export default function Dashboard() {
     <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-black text-gray-900 tracking-tight">Dashboard</h1>
-        <p className="text-gray-500 mt-2 font-medium">Welcome back! Here's your study overview for today.</p>
+        <h1 className="text-4xl font-black text-gray-900 tracking-tight">Bảng điều khiển</h1>
+        <p className="text-gray-500 mt-2 font-medium">Chào mừng trở lại! Đây là tổng quan học tập của bạn hôm nay.</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <StatCard
-          title="Total Study Time"
-          value={`${stats.totalStudyTime} min`}
-          subtitle={`${stats.estimatedTime} min estimated`}
+          title="Tổng thời gian học"
+          value={`${stats.totalStudyTime} phút`}
+          subtitle={`Dự kiến ${stats.estimatedTime} phút`}
           icon={Clock}
           iconColor="bg-indigo-50 text-indigo-600" />
         
         <StatCard
-          title="Completed Tasks"
+          title="Công việc đã xong"
           value={stats.completedTasks}
-          subtitle="Keep going!"
+          subtitle="Cố gắng lên!"
           icon={CheckCircle2}
           iconColor="bg-green-50 text-green-600" />
         
         <StatCard
-          title="Active Subjects"
+          title="Môn học đang học"
           value={stats.activeSubjects}
-          subtitle="Currently enrolled"
+          subtitle="Đang tham gia"
           icon={Target}
           iconColor="bg-purple-50 text-purple-600" />
         
         <StatCard
-          title="Progress Rate"
+          title="Tỉ lệ tiến độ"
           value={`${progressRate}%`}
-          subtitle="Achievement score"
+          subtitle="Điểm thành tựu"
           icon={TrendingUp}
           iconColor="bg-blue-50 text-blue-600" />
       </div>
@@ -118,13 +110,13 @@ export default function Dashboard() {
       {/* Subject Overview */}
       <div className="mb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">My Subjects</h2>
-          <button onClick={() => window.location.href = '/subjects'} className="text-indigo-600 font-bold hover:underline">View All</button>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Môn học của tôi</h2>
+          <button onClick={() => window.location.href = '/subjects'} className="text-indigo-600 font-bold hover:underline">Xem tất cả</button>
         </div>
         
         {subjects.length === 0 ? (
           <div className="bg-gray-50 rounded-2xl p-8 text-center border-2 border-dashed border-gray-200">
-            <p className="text-gray-500 font-medium">No subjects found. Add some to see them here.</p>
+            <p className="text-gray-500 font-medium">Chưa tìm thấy môn học nào. Hãy thêm môn học để xem tại đây.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -148,7 +140,7 @@ export default function Dashboard() {
         </div>
         <div className="space-y-6">
           <SessionTracker recentSession={recentSession ? {
-            subject: recentSession.task?.subject?.name || 'Quick Session',
+            subject: recentSession.task?.subject?.name || 'Phiên học nhanh',
             subjectColor: recentSession.task?.subject?.color || '#6366f1',
             durationMinutes: recentSession.duration_minutes || 0,
             notes: recentSession.notes
@@ -157,4 +149,4 @@ export default function Dashboard() {
       </div>
     </div>
   );
-}
+}

@@ -1,27 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Calendar, Clock } from 'lucide-react';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { format } from 'date-fns';
 
 const priorityColors = {
   LOW: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   MED: 'bg-amber-50 text-amber-700 border-amber-200',
   HIGH: 'bg-red-50 text-red-700 border-red-200'
+};
+
+const priorityLabels = {
+  LOW: 'Thấp',
+  MED: 'Trung bình',
+  HIGH: 'Cao'
 };
 
 const statusColors = {
@@ -31,25 +22,25 @@ const statusColors = {
 };
 
 const statusLabels = {
-  TODO: 'To-do',
-  IN_PROGRESS: 'Learning',
-  DONE: 'Finished'
+  TODO: 'Cần làm',
+  IN_PROGRESS: 'Đang làm',
+  DONE: 'Hoàn thành'
 };
 
 export default function TaskList({ tasks }) {
   return (
     <Card className="border-none shadow-md bg-white overflow-hidden">
       <CardHeader className="border-b border-gray-50 flex flex-row items-center justify-between">
-        <CardTitle className="text-xl font-bold text-gray-800">Coming Up</CardTitle>
+        <CardTitle className="text-xl font-bold text-gray-800">Sắp tới</CardTitle>
         <Badge variant="secondary" className="font-bold bg-indigo-50 text-indigo-700 border-indigo-100">
-          {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+          {tasks.length} công việc
         </Badge>
       </CardHeader>
       <CardContent className="p-4">
         <div className="space-y-4">
           {tasks.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-gray-400 font-medium italic">No upcoming tasks</p>
+              <p className="text-gray-400 font-medium italic">Không có công việc sắp tới</p>
             </div>
           ) : (
             tasks.map((task) => (
@@ -61,27 +52,27 @@ export default function TaskList({ tasks }) {
                   <div className="flex-1">
                     <h4 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{task.title}</h4>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
-                      {task.subject?.name || 'Uncategorized'}
+                      {task.subject?.name || 'Chưa phân loại'}
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Badge variant="outline" className={`${priorityColors[task.priority]} font-bold px-2 py-0.5 border`}>
-                      {task.priority || 'MED'}
+                    <Badge variant="outline" className={`${priorityColors[task.priority] || 'bg-slate-50'} font-bold px-2 py-0.5 border`}>
+                      {priorityLabels[task.priority] || task.priority || 'MED'}
                     </Badge>
                   </div>
                 </div>
                 <div className="flex items-center gap-6 text-xs text-gray-500 font-bold">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-gray-300" />
-                    <span>{task.due_date ? format(new Date(task.due_date), 'MMM dd') : 'No date'}</span>
+                    <span>{task.due_date ? format(new Date(task.due_date), 'dd/MM') : 'Không có hạn'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-gray-300" />
-                    <span className="font-mono">{task.estimated_minutes}M</span>
+                    <span className="font-mono">{task.estimated_minutes} phút</span>
                   </div>
                   <div className="ml-auto">
                      <Badge className={`${statusColors[task.status] || 'bg-gray-50 text-gray-700'} font-black tracking-tight text-[10px] py-0 px-2`}>
-                        {statusLabels[task.status] || 'N/A'}
+                        {statusLabels[task.status] || task.status || 'N/A'}
                      </Badge>
                   </div>
                 </div>
@@ -92,4 +83,4 @@ export default function TaskList({ tasks }) {
       </CardContent>
     </Card>
   );
-}
+}

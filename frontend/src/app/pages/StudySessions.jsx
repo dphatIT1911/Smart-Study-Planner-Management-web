@@ -48,7 +48,7 @@ export default function StudySessions() {
     return (
       <div className="flex flex-col items-center justify-center h-96 gap-4">
         <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-        <p className="text-gray-500 font-medium italic">Loading your study history...</p>
+        <p className="text-gray-500 font-medium italic">Đang tải lịch sử học tập...</p>
       </div>
     );
   }
@@ -57,12 +57,12 @@ export default function StudySessions() {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Study Sessions</h1>
-          <p className="text-gray-600 mt-2">Track your study time and productivity</p>
+          <h1 className="text-3xl font-bold text-gray-900">Phiên học</h1>
+          <p className="text-gray-600 mt-2">Theo dõi thời gian học và năng suất của bạn</p>
         </div>
         <Button className="bg-indigo-600 hover:bg-indigo-700 gap-2">
           <Plus className="w-4 h-4" />
-          Log Session
+          Ghi lại phiên học
         </Button>
       </div>
 
@@ -71,16 +71,16 @@ export default function StudySessions() {
         <Card className="border-none shadow-md bg-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-bold text-gray-400 uppercase tracking-wider">
-              Total Study Time
+              Tuần này
             </CardTitle>
             <Clock className="w-4 h-4 text-indigo-600" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-gray-900">
-              {stats.totalMinutes} <span className="text-sm font-normal text-gray-400">min</span>
+              {stats.totalMinutes} <span className="text-sm font-normal text-gray-400">phút</span>
             </div>
             <p className="text-xs text-gray-500 mt-2 flex items-center gap-1 font-medium">
-              <span className="text-green-500">↑</span> All time recorded
+              <span className="text-green-500">↑</span> Tổng thời gian học
             </p>
           </CardContent>
         </Card>
@@ -88,16 +88,16 @@ export default function StudySessions() {
         <Card className="border-none shadow-md bg-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-bold text-gray-400 uppercase tracking-wider">
-              Avg Session
+              Trung bình mỗi ngày
             </CardTitle>
             <TrendingUp className="w-4 h-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-gray-900">
-              {stats.averagePerDay} <span className="text-sm font-normal text-gray-400">min</span>
+              {stats.averagePerDay} <span className="text-sm font-normal text-gray-400">phút</span>
             </div>
             <p className="text-xs text-gray-500 mt-2 flex items-center gap-1 font-medium">
-              Daily productivity score
+              Mỗi ngày
             </p>
           </CardContent>
         </Card>
@@ -105,16 +105,16 @@ export default function StudySessions() {
         <Card className="border-none shadow-md bg-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-bold text-gray-400 uppercase tracking-wider">
-              Longest Burst
+              Phiên học dài nhất
             </CardTitle>
             <Clock className="w-4 h-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-gray-900">
-              {stats.longestSession} <span className="text-sm font-normal text-gray-400">min</span>
+              {stats.longestSession} <span className="text-sm font-normal text-gray-400">phút</span>
             </div>
             <p className="text-xs text-gray-500 mt-2 flex items-center gap-1 font-medium">
-              Peak focus duration
+              Tuần này
             </p>
           </CardContent>
         </Card>
@@ -129,8 +129,8 @@ export default function StudySessions() {
                   <Clock className="w-7 h-7 text-gray-300" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">No sessions recorded</h3>
-                  <p className="text-gray-500 text-sm">Start a task study session to begin tracking your data.</p>
+                  <h3 className="text-lg font-bold text-gray-900">Chưa có phiên học nào được ghi lại</h3>
+                  <p className="text-gray-500 text-sm">Bắt đầu một phiên học để theo dõi dữ liệu của bạn.</p>
                 </div>
               </div>
            </Card>
@@ -149,20 +149,20 @@ export default function StudySessions() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h3 className="font-bold text-lg text-gray-900 group-hover:text-indigo-600 transition-colors">
-                          {session.task?.title || 'Standalone Session'}
+                          {session.task?.title || 'Phiên học tự do'}
                         </h3>
                         <p className="text-sm font-semibold text-gray-400 uppercase tracking-tight mt-0.5">
-                          {session.task?.subject?.name || 'Quick Study'}
+                          {session.task?.subject?.name || 'Học tập nhanh'}
                         </p>
                         <div className="flex items-center gap-5 mt-4 text-sm text-gray-500 font-medium">
                           <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-full">
                             <Calendar className="w-4 h-4 text-gray-400" />
-                            <span>{session.start_time ? format(new Date(session.start_time), 'MMM d, yyyy') : 'Recently'}</span>
+                            <span>{session.start_time ? format(new Date(session.start_time), 'dd/MM/yyyy') : 'Gần đây'}</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-full">
                             <Clock className="w-4 h-4 text-gray-400" />
                             <span>
-                              {format(new Date(session.start_time), 'HH:mm')} - {session.end_time ? format(new Date(session.end_time), 'HH:mm') : 'Now'}
+                              {format(new Date(session.start_time), 'HH:mm')} - {session.end_time ? format(new Date(session.end_time), 'HH:mm') : 'Bây giờ'}
                             </span>
                           </div>
                         </div>
@@ -176,7 +176,7 @@ export default function StudySessions() {
                           color: session.task?.subject?.color || '#6366f1'
                         }}>
                       
-                        {session.duration_minutes || '?'} <span className="text-xs font-bold ml-1 opacity-70">MIN</span>
+                        {session.duration_minutes || '?'} <span className="text-xs font-bold ml-1 opacity-70">PHÚT</span>
                       </Badge>
                     </div>
                     {session.notes &&
@@ -193,4 +193,4 @@ export default function StudySessions() {
       </div>
     </div>
   );
-}
+}
