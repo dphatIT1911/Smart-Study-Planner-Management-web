@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -8,6 +8,18 @@ from app.services.study_session import study_session as session_service
 from app.models.user import User
 
 router = APIRouter()
+
+@router.get("/", response_model=List[StudySessionResponse])
+def get_study_sessions(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    skip: int = 0,
+    limit: int = 100
+) -> Any:
+    """
+    Retrieve study sessions for the current user.
+    """
+    return session_service.get_multi_by_owner(db=db, user_id=current_user.id, skip=skip, limit=limit)
 
 @router.post("/", response_model=StudySessionResponse)
 def create_study_session(

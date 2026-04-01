@@ -1,167 +1,160 @@
+import { useState, useEffect } from 'react';
 import StatCard from './StatCard';
 import SubjectCard from './SubjectCard';
 import TaskList from './TaskList';
 import SessionTracker from './SessionTracker';
-import { Clock, Target, CheckCircle2, TrendingUp } from 'lucide-react';
-
-// Mock data matching database schema
-const mockStats = {
-  totalStudyTime: 1245, // sum of actual_minutes from STUDY_SESSION
-  estimatedTime: 1500, // sum of estimated_minutes from TASK
-  completedTasks: 12,
-  activeSubjects: 4
-};
-
-const mockSubjects = [
-{
-  id: '1',
-  name: 'Advanced Mathematics',
-  semester: 'Spring 2026',
-  color: '#6366f1', // Indigo
-  targetScore: 95,
-  currentProgress: 78
-},
-{
-  id: '2',
-  name: 'Data Structures',
-  semester: 'Spring 2026',
-  color: '#8b5cf6', // Purple
-  targetScore: 90,
-  currentProgress: 85
-},
-{
-  id: '3',
-  name: 'Web Development',
-  semester: 'Spring 2026',
-  color: '#ec4899', // Pink
-  targetScore: 92,
-  currentProgress: 65
-},
-{
-  id: '4',
-  name: 'Database Systems',
-  semester: 'Spring 2026',
-  color: '#14b8a6', // Teal
-  targetScore: 88,
-  currentProgress: 72
-}];
-
-
-const mockTasks = [
-{
-  id: '1',
-  title: 'Complete Chapter 5 Exercises',
-  subject: 'Advanced Mathematics',
-  dueDate: 'Mar 28, 2026',
-  priority: 'High',
-  status: 'In-progress',
-  estimatedMinutes: 90
-},
-{
-  id: '2',
-  title: 'Build Binary Search Tree',
-  subject: 'Data Structures',
-  dueDate: 'Mar 29, 2026',
-  priority: 'Med',
-  status: 'To-do',
-  estimatedMinutes: 120
-},
-{
-  id: '3',
-  title: 'Design Portfolio Website',
-  subject: 'Web Development',
-  dueDate: 'Mar 30, 2026',
-  priority: 'Med',
-  status: 'In-progress',
-  estimatedMinutes: 180
-},
-{
-  id: '4',
-  title: 'SQL Query Practice',
-  subject: 'Database Systems',
-  dueDate: 'Mar 27, 2026',
-  priority: 'Low',
-  status: 'To-do',
-  estimatedMinutes: 60
-}];
-
-
-const mockRecentSession = {
-  id: '1',
-  subject: 'Advanced Mathematics',
-  subjectColor: '#6366f1',
-  date: 'Mar 25, 2026',
-  durationMinutes: 85,
-  notes: 'Completed calculus problems, focused on integration techniques.'
-};
+import { Clock, Target, CheckCircle2, TrendingUp, Loader2 } from 'lucide-react';
+import { api } from '../../api';
 
 export default function Dashboard() {
+  const [stats, setStats] = useState({
+    totalStudyTime: 0,
+    estimatedTime: 0,
+    completedTasks: 0,
+    activeSubjects: 0
+  });
+  const [subjects, setSubjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [recentSession, setRecentSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        console.log('Fetching dashboard data...');
+        
+        // Fetch all necessary data in parallel
+        const [allSubjects, allTasks, allSessions] = await Promise.all([
+          api.subjects.getAll().catch(err => { console.error('Subjects fetch error:', err); return []; }),
+          api.tasks.getAll().catch(err => { console.error('Tasks fetch error:', err); return []; }),
+          api.sessions.getAll().catch(err => { console.error('Sessions fetch error:', err); return []; })
+        ]);
+
+        console.log('Dashboard Data Received:', {
+          subjects: allSubjects,
+          tasks: allTasks,
+          sessions: allSessions
+        });
+
+        // Calculate statistics manually from the real data
+        const totalMinutes = Array.isArray(allSessions) ? allSessions.reduce((acc, s) => acc + (s.duration_minutes || 0), 0) : 0;
+        const estimatedMinutes = Array.isArray(allTasks) ? allTasks.reduce((acc, t) => acc + (t.estimated_minutes || 0), 0) : 0;
+        const completed = Array.isArray(allTasks) ? allTasks.filter(t => t.status === 'DONE').length : 0;
+
+        setStats({
+          totalStudyTime: totalMinutes,
+          estimatedTime: estimatedMinutes,
+          completedTasks: completed,
+          activeSubjects: Array.isArray(allSubjects) ? allSubjects.length : 0
+        });
+
+        setSubjects(Array.isArray(allSubjects) ? allSubjects.slice(0, 4) : []);
+        setTasks(Array.isArray(allTasks) ? allTasks.slice(0, 5) : []);
+        setRecentSession(Array.isArray(allSessions) ? allSessions[0] || null : null);
+        
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen -mt-20 gap-4">
+        <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
+        <p className="text-gray-500 font-bold text-lg tracking-tight uppercase">Synthesizing your progress...</p>
+      </div>
+    );
+  }
+
+  const progressRate = stats.estimatedTime > 0 
+    ? Math.round((stats.totalStudyTime / stats.estimatedTime) * 100) 
+    : 0;
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome back! Here's your study overview.</p>
+        <h1 className="text-4xl font-black text-gray-900 tracking-tight">Dashboard</h1>
+        <p className="text-gray-500 mt-2 font-medium">Welcome back! Here's your study overview for today.</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <StatCard
           title="Total Study Time"
-          value={`${mockStats.totalStudyTime} min`}
-          subtitle={`${mockStats.estimatedTime} min estimated`}
+          value={`${stats.totalStudyTime} min`}
+          subtitle={`${stats.estimatedTime} min estimated`}
           icon={Clock}
-          iconColor="bg-indigo-100 text-indigo-600" />
+          iconColor="bg-indigo-50 text-indigo-600" />
         
         <StatCard
           title="Completed Tasks"
-          value={mockStats.completedTasks}
-          subtitle="This month"
+          value={stats.completedTasks}
+          subtitle="Keep going!"
           icon={CheckCircle2}
-          iconColor="bg-green-100 text-green-600" />
+          iconColor="bg-green-50 text-green-600" />
         
         <StatCard
           title="Active Subjects"
-          value={mockStats.activeSubjects}
-          subtitle="Spring 2026"
+          value={stats.activeSubjects}
+          subtitle="Currently enrolled"
           icon={Target}
-          iconColor="bg-purple-100 text-purple-600" />
+          iconColor="bg-purple-50 text-purple-600" />
         
         <StatCard
           title="Progress Rate"
-          value={`${Math.round(mockStats.totalStudyTime / mockStats.estimatedTime * 100)}%`}
-          subtitle="On track"
+          value={`${progressRate}%`}
+          subtitle="Achievement score"
           icon={TrendingUp}
-          iconColor="bg-blue-100 text-blue-600" />
-        
+          iconColor="bg-blue-50 text-blue-600" />
       </div>
 
       {/* Subject Overview */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">My Subjects</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {mockSubjects.map((subject) =>
-          <SubjectCard
-            key={subject.id}
-            name={subject.name}
-            semester={subject.semester}
-            color={subject.color}
-            targetScore={subject.targetScore}
-            currentProgress={subject.currentProgress} />
-
-          )}
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">My Subjects</h2>
+          <button onClick={() => window.location.href = '/subjects'} className="text-indigo-600 font-bold hover:underline">View All</button>
         </div>
+        
+        {subjects.length === 0 ? (
+          <div className="bg-gray-50 rounded-2xl p-8 text-center border-2 border-dashed border-gray-200">
+            <p className="text-gray-500 font-medium">No subjects found. Add some to see them here.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {subjects.map((subject) =>
+              <SubjectCard
+                key={subject.id}
+                name={subject.name}
+                semester={subject.semester}
+                color={subject.color}
+                targetScore={subject.target_score}
+                currentProgress={0} />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tasks and Session */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <TaskList tasks={mockTasks} />
+          <TaskList tasks={tasks} />
         </div>
-        <div>
-          <SessionTracker recentSession={mockRecentSession} />
+        <div className="space-y-6">
+          <SessionTracker recentSession={recentSession ? {
+            subject: recentSession.task?.subject?.name || 'Quick Session',
+            subjectColor: recentSession.task?.subject?.color || '#6366f1',
+            durationMinutes: recentSession.duration_minutes || 0,
+            notes: recentSession.notes
+          } : null} />
         </div>
       </div>
-    </div>);
-
-}
+    </div>
+  );
+}

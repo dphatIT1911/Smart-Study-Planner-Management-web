@@ -5,37 +5,46 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Loader2, AlertCircle } from 'lucide-react';
+import { api } from '../../api';
 
 const timezones = [
-'UTC',
-'America/New_York',
-'America/Chicago',
-'America/Denver',
-'America/Los_Angeles',
-'Europe/London',
-'Europe/Paris',
-'Asia/Tokyo',
-'Asia/Shanghai',
-'Australia/Sydney'];
-
+  'UTC', 'Asia/Ho_Chi_Minh', 'Asia/Tokyo', 'Asia/Shanghai', 
+  'Europe/London', 'Europe/Paris', 'America/New_York', 'America/Los_Angeles'
+];
 
 export default function SignupPage() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [timezone, setTimezone] = useState('UTC');
+  const [timezone, setTimezone] = useState('Asia/Ho_Chi_Minh');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    // Mock signup - in real app, this would create account in backend
-    localStorage.setItem('user', JSON.stringify({
-      name,
-      email,
-      timezone
-    }));
-    navigate('/');
+    setError('');
+    setLoading(true);
+
+    try {
+      if (!name || !email || !password) {
+        throw new Error('All fields are required');
+      }
+
+      await api.register({
+        name,
+        email,
+        password,
+        timezone
+      });
+
+      navigate('/login');
+    } catch (err) {
+      setError(err.message || 'Registration failed. Try a different email.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,6 +59,12 @@ export default function SignupPage() {
         </CardHeader>
         <form onSubmit={handleSignup}>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2 text-sm">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <p>{error}</p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input
@@ -58,7 +73,9 @@ export default function SignupPage() {
                 placeholder="John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required />
+                disabled={loading}
+                required
+                minLength={3} />
               
             </div>
             <div className="space-y-2">
@@ -69,6 +86,7 @@ export default function SignupPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
                 required />
               
             </div>
@@ -77,16 +95,17 @@ export default function SignupPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Minimum 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
                 required
-                minLength={6} />
+                minLength={8} />
               
             </div>
             <div className="space-y-2">
               <Label htmlFor="timezone">Timezone</Label>
-              <Select value={timezone} onValueChange={setTimezone}>
+              <Select value={timezone} onValueChange={setTimezone} disabled={loading}>
                 <SelectTrigger id="timezone">
                   <SelectValue />
                 </SelectTrigger>
@@ -101,8 +120,12 @@ export default function SignupPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700">
-              Create Account
+            <Button 
+              type="submit" 
+              className="w-full bg-indigo-600 hover:bg-indigo-700 h-11"
+              disabled={loading}
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
             </Button>
             <p className="text-sm text-center text-gray-600">
               Already have an account?{' '}

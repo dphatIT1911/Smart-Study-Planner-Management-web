@@ -1,85 +1,79 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Plus, Calendar, Clock, CheckCircle2 } from 'lucide-react';
-
-const tasks = [
-{
-  id: '1',
-  title: 'Complete Chapter 5 Exercises',
-  subject: 'Advanced Mathematics',
-  subjectColor: '#6366f1',
-  dueDate: 'Mar 28, 2026',
-  priority: 'High',
-  status: 'In-progress',
-  estimatedMinutes: 90
-},
-{
-  id: '2',
-  title: 'Build Binary Search Tree',
-  subject: 'Data Structures',
-  subjectColor: '#8b5cf6',
-  dueDate: 'Mar 29, 2026',
-  priority: 'Med',
-  status: 'To-do',
-  estimatedMinutes: 120
-},
-{
-  id: '3',
-  title: 'Design Portfolio Website',
-  subject: 'Web Development',
-  subjectColor: '#ec4899',
-  dueDate: 'Mar 30, 2026',
-  priority: 'Med',
-  status: 'In-progress',
-  estimatedMinutes: 180
-},
-{
-  id: '4',
-  title: 'SQL Query Practice',
-  subject: 'Database Systems',
-  subjectColor: '#14b8a6',
-  dueDate: 'Mar 27, 2026',
-  priority: 'Low',
-  status: 'To-do',
-  estimatedMinutes: 60
-},
-{
-  id: '5',
-  title: 'Linear Algebra Assignment',
-  subject: 'Advanced Mathematics',
-  subjectColor: '#6366f1',
-  dueDate: 'Mar 25, 2026',
-  priority: 'High',
-  status: 'Done',
-  estimatedMinutes: 75
-}];
-
+import { Plus, Calendar, Clock, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { api } from '../api';
+import { format } from 'date-fns';
 
 const priorityColors = {
-  Low: 'bg-green-100 text-green-700 border-green-200',
-  Med: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  High: 'bg-red-100 text-red-700 border-red-200'
+  HIGH: 'bg-red-50 text-red-700 border-red-200 shadow-sm',
+  MED: 'bg-amber-50 text-amber-700 border-amber-200 shadow-sm',
+  LOW: 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
 };
 
 const statusColors = {
-  'To-do': 'bg-gray-100 text-gray-700 border-gray-200',
-  'In-progress': 'bg-blue-100 text-blue-700 border-blue-200',
-  'Done': 'bg-green-100 text-green-700 border-green-200'
+  TODO: 'bg-slate-100 text-slate-700 border-slate-200',
+  IN_PROGRESS: 'bg-blue-50 text-blue-700 border-blue-200 animate-pulse-subtle',
+  DONE: 'bg-green-50 text-green-700 border-green-200'
+};
+
+const statusLabels = {
+  TODO: 'To-do',
+  IN_PROGRESS: 'In Progress',
+  DONE: 'Completed'
 };
 
 export default function TaskListPage() {
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        setLoading(true);
+        const data = await api.tasks.getAll();
+        setTasks(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch tasks:', err);
+        setError('We couldn\'t load your tasks. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
+  const handleMarkComplete = async (taskId) => {
+    try {
+      await api.tasks.markComplete(taskId);
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, status: 'DONE' } : t));
+    } catch (err) {
+      console.error('Failed to update task:', err);
+    }
+  };
 
   const filteredTasks = tasks.filter((task) => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'todo') return task.status === 'To-do';
-    if (activeTab === 'in-progress') return task.status === 'In-progress';
-    if (activeTab === 'done') return task.status === 'Done';
+    if (activeTab === 'todo') return task.status === 'TODO';
+    if (activeTab === 'in-progress') return task.status === 'IN_PROGRESS';
+    if (activeTab === 'done') return task.status === 'DONE';
     return true;
   });
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 gap-4">
+        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+        <p className="text-gray-500 font-medium">Fetching your assignments...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -88,77 +82,91 @@ export default function TaskListPage() {
           <h1 className="text-3xl font-bold text-gray-900">Task List</h1>
           <p className="text-gray-600 mt-2">Organize and track your assignments</p>
         </div>
-        <Button className="bg-indigo-600 hover:bg-indigo-700 gap-2">
+        <Button className="bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-100 gap-2">
           <Plus className="w-4 h-4" />
-          Add Task
+          Add New Task
         </Button>
       </div>
 
+      {error ? (
+        <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg flex items-center gap-3 text-amber-800 mb-6">
+          <AlertCircle className="w-5 h-5" />
+          <p>{error}</p>
+        </div>
+      ) : null}
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="all">All Tasks ({tasks.length})</TabsTrigger>
-          <TabsTrigger value="todo">
-            To-do ({tasks.filter((t) => t.status === 'To-do').length})
-          </TabsTrigger>
-          <TabsTrigger value="in-progress">
-            In Progress ({tasks.filter((t) => t.status === 'In-progress').length})
-          </TabsTrigger>
-          <TabsTrigger value="done">
-            Done ({tasks.filter((t) => t.status === 'Done').length})
-          </TabsTrigger>
+        <TabsList className="mb-8 p-1 bg-gray-100/50 backdrop-blur-sm border border-gray-200">
+          <TabsTrigger value="all" className="px-6">All Tasks</TabsTrigger>
+          <TabsTrigger value="todo" className="px-6 text-gray-600">To-do</TabsTrigger>
+          <TabsTrigger value="in-progress" className="px-6 text-blue-600">In Progress</TabsTrigger>
+          <TabsTrigger value="done" className="px-6 text-green-600">Done</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab}>
-          <div className="space-y-4">
-            {filteredTasks.map((task) =>
-            <Card key={task.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div
-                    className="w-1 h-16 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: task.subjectColor }} />
-                  
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg text-gray-900">{task.title}</h3>
-                          <p className="text-sm text-gray-500 mt-1">{task.subject}</p>
-                        </div>
-                        <div className="flex gap-2 ml-4">
-                          <Badge variant="outline" className={priorityColors[task.priority]}>
-                            {task.priority}
-                          </Badge>
-                          <Badge variant="outline" className={statusColors[task.status]}>
-                            {task.status}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-6 text-sm text-gray-500 mt-3">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          <span>Due {task.dueDate}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          <span>{task.estimatedMinutes} minutes</span>
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-2">
+          {filteredTasks.length === 0 ? (
+            <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+              <div className="bg-white w-16 h-16 rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="w-8 h-8 text-gray-300" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">No tasks found</h3>
+              <p className="text-gray-500 mt-1">Looks like you're all caught up!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredTasks.map((task) =>
+                <Card key={task.id} className="group hover:border-indigo-200 hover:shadow-md transition-all duration-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div
+                        className="w-1 h-16 rounded-full flex-shrink-0 transition-all duration-300 group-hover:w-1.5"
+                        style={{ backgroundColor: task.subject?.color || '#cbd5e1' }} />
                     
-                      <CheckCircle2 className="w-4 h-4" />
-                      Mark Complete
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg text-gray-900 group-hover:text-indigo-600 transition-colors">{task.title}</h3>
+                            <p className="text-sm font-medium text-gray-500 mt-1">{task.subject?.name || 'No Subject'}</p>
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            <Badge variant="outline" className={`${priorityColors[task.priority]} font-bold px-2.5 py-0.5`}>
+                              {task.priority}
+                            </Badge>
+                            <Badge variant="outline" className={`${statusColors[task.status]} font-semibold px-2.5 py-0.5`}>
+                              {statusLabels[task.status]}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-6 text-sm text-gray-500 mt-4">
+                          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            <span className="font-medium">Due {task.due_date ? format(new Date(task.due_date), 'MMM d, yyyy') : 'No date'}</span>
+                          </div>
+                          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                            <Clock className="w-4 h-4 text-gray-400" />
+                            <span className="font-medium font-mono">{task.estimated_minutes}m</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {task.status !== 'DONE' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleMarkComplete(task.id)}
+                          className="gap-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all h-auto py-3 px-4 border border-transparent hover:border-green-100">
+                          <CheckCircle2 className="w-5 h-5" />
+                          <span className="font-semibold">Done</span>
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
-    </div>);
-
-}
+    </div>
+  );
+}

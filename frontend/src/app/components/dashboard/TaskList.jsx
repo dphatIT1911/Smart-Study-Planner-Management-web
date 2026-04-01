@@ -16,59 +16,80 @@ import { Calendar, Clock } from 'lucide-react';
 
 
 
+import { format } from 'date-fns';
+
 const priorityColors = {
-  Low: 'bg-green-100 text-green-700 border-green-200',
-  Med: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  High: 'bg-red-100 text-red-700 border-red-200'
+  LOW: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  MED: 'bg-amber-50 text-amber-700 border-amber-200',
+  HIGH: 'bg-red-50 text-red-700 border-red-200'
 };
 
 const statusColors = {
-  'To-do': 'bg-gray-100 text-gray-700 border-gray-200',
-  'In-progress': 'bg-blue-100 text-blue-700 border-blue-200',
-  'Done': 'bg-green-100 text-green-700 border-green-200'
+  TODO: 'bg-slate-50 text-slate-700 border-slate-200',
+  IN_PROGRESS: 'bg-blue-50 text-blue-700 border-blue-200',
+  DONE: 'bg-green-50 text-green-700 border-green-200'
+};
+
+const statusLabels = {
+  TODO: 'To-do',
+  IN_PROGRESS: 'Learning',
+  DONE: 'Finished'
 };
 
 export default function TaskList({ tasks }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Coming Up</CardTitle>
+    <Card className="border-none shadow-md bg-white overflow-hidden">
+      <CardHeader className="border-b border-gray-50 flex flex-row items-center justify-between">
+        <CardTitle className="text-xl font-bold text-gray-800">Coming Up</CardTitle>
+        <Badge variant="secondary" className="font-bold bg-indigo-50 text-indigo-700 border-indigo-100">
+          {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+        </Badge>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {tasks.map((task) =>
-          <div
-            key={task.id}
-            className="p-4 border border-gray-200 rounded-lg hover:border-indigo-200 transition-colors">
-            
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">{task.title}</h4>
-                  <p className="text-sm text-gray-500 mt-0.5">{task.subject}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Badge variant="outline" className={priorityColors[task.priority]}>
-                    {task.priority}
-                  </Badge>
-                  <Badge variant="outline" className={statusColors[task.status]}>
-                    {task.status}
-                  </Badge>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>{task.dueDate}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>{task.estimatedMinutes} min</span>
-                </div>
-              </div>
+      <CardContent className="p-4">
+        <div className="space-y-4">
+          {tasks.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-gray-400 font-medium italic">No upcoming tasks</p>
             </div>
+          ) : (
+            tasks.map((task) => (
+              <div
+                key={task.id}
+                className="p-5 border border-gray-100 rounded-2xl hover:border-indigo-100 hover:shadow-sm transition-all duration-300 bg-white group cursor-default"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h4 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{task.title}</h4>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
+                      {task.subject?.name || 'Uncategorized'}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge variant="outline" className={`${priorityColors[task.priority]} font-bold px-2 py-0.5 border`}>
+                      {task.priority || 'MED'}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6 text-xs text-gray-500 font-bold">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-300" />
+                    <span>{task.due_date ? format(new Date(task.due_date), 'MMM dd') : 'No date'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-300" />
+                    <span className="font-mono">{task.estimated_minutes}M</span>
+                  </div>
+                  <div className="ml-auto">
+                     <Badge className={`${statusColors[task.status] || 'bg-gray-50 text-gray-700'} font-black tracking-tight text-[10px] py-0 px-2`}>
+                        {statusLabels[task.status] || 'N/A'}
+                     </Badge>
+                  </div>
+                </div>
+              </div>
+            ))
           )}
         </div>
       </CardContent>
-    </Card>);
-
-}
+    </Card>
+  );
+}
