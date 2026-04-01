@@ -4,12 +4,14 @@ import SubjectCard from './SubjectCard';
 import TaskList from './TaskList';
 import SessionTracker from './SessionTracker';
 import { Badge } from '../ui/badge';
-import { toast } from 'sonner';
-import { Clock, Target, CheckCircle2, TrendingUp, Loader2, Bird } from 'lucide-react';
+import { Clock, Target, CheckCircle2, TrendingUp, Loader2 } from 'lucide-react';
+import Mascot from '../mascot/Mascot';
 import { api } from '../../api';
 
 export default function Dashboard() {
   const [greeting, setGreeting] = useState('');
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeClosing, setWelcomeClosing] = useState(false);
   const [stats, setStats] = useState({
     totalStudyTime: 0,
     estimatedTime: 0,
@@ -20,6 +22,14 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [recentSession, setRecentSession] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const closeWelcome = () => {
+    setWelcomeClosing(true);
+    setTimeout(() => {
+      setShowWelcome(false);
+      setWelcomeClosing(false);
+    }, 400);
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -68,14 +78,15 @@ export default function Dashboard() {
     
     setGreeting(currentGreeting);
 
-    // Greet user precisely once per session
+    // Show welcome popup once per session
     if (!sessionStorage.getItem('hasWelcomed_genz')) {
       setTimeout(() => {
-        toast('Bíp bíp! 🐥', {
-          description: currentGreeting + ' Chúc bạn học thật vui!',
-          duration: 4000,
-        });
+        setShowWelcome(true);
         sessionStorage.setItem('hasWelcomed_genz', 'true');
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+          closeWelcome();
+        }, 5000);
       }, 800);
     }
 
@@ -96,6 +107,102 @@ export default function Dashboard() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
+
+      {/* Welcome Popup Overlay */}
+      {showWelcome && (
+        <div
+          onClick={closeWelcome}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: welcomeClosing ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,0.5)',
+            backdropFilter: welcomeClosing ? 'blur(0px)' : 'blur(4px)',
+            transition: 'background-color 0.4s ease, backdrop-filter 0.4s ease',
+            animation: welcomeClosing ? undefined : 'welcomeOverlayIn 0.4s ease forwards',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 30%, #c7d2fe 100%)',
+              borderRadius: '2rem',
+              padding: '3rem 3.5rem',
+              maxWidth: '520px',
+              width: '90vw',
+              textAlign: 'center',
+              boxShadow: '0 25px 60px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.1)',
+              transform: welcomeClosing ? 'scale(0.85)' : undefined,
+              opacity: welcomeClosing ? 0 : undefined,
+              transition: welcomeClosing ? 'transform 0.4s ease, opacity 0.4s ease' : undefined,
+              animation: welcomeClosing ? undefined : 'welcomePopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+            }}
+          >
+            <div style={{ marginBottom: '0.5rem' }}>
+              <Mascot size={100} mood="cheer" animate={true} />
+            </div>
+            <h2 style={{
+              fontSize: '1.75rem',
+              fontWeight: 900,
+              color: '#3730a3',
+              marginBottom: '0.75rem',
+              letterSpacing: '-0.02em',
+            }}>
+              Bíp bíp! Chào bạn nè!
+            </h2>
+            <p style={{
+              fontSize: '1.15rem',
+              fontWeight: 600,
+              color: '#4338ca',
+              lineHeight: 1.6,
+              marginBottom: '1.5rem',
+            }}>
+              {greeting}
+              <br />
+              <span style={{ opacity: 0.75, fontSize: '1rem' }}>Chúc bạn học thật vui! 💪✨</span>
+            </p>
+            <button
+              onClick={closeWelcome}
+              style={{
+                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '9999px',
+                padding: '0.75rem 2.5rem',
+                fontSize: '1rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              }}
+              onMouseEnter={(e) => { e.target.style.transform = 'scale(1.05)'; e.target.style.boxShadow = '0 6px 20px rgba(99, 102, 241, 0.5)'; }}
+              onMouseLeave={(e) => { e.target.style.transform = 'scale(1)'; e.target.style.boxShadow = '0 4px 15px rgba(99, 102, 241, 0.4)'; }}
+            >
+              Cày thôi nào! 🚀
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Keyframe animations for the welcome popup */}
+      <style>{`
+        @keyframes welcomeOverlayIn {
+          from { background-color: rgba(0,0,0,0); backdrop-filter: blur(0px); }
+          to { background-color: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        }
+        @keyframes welcomePopIn {
+          from { transform: scale(0.6); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes welcomeBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+      `}</style>
+
       {/* Header */}
       <div className="mb-10 flex items-center justify-between bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100">
         <div>
@@ -107,8 +214,8 @@ export default function Dashboard() {
              {greeting}
           </p>
         </div>
-        <div className="hidden sm:flex h-20 w-20 bg-white rounded-full items-center justify-center shadow-sm border border-indigo-100">
-           <Bird className="w-10 h-10 text-indigo-500 animate-bounce" />
+        <div className="hidden sm:flex items-center justify-center">
+           <Mascot size={90} mood="happy" animate={true} />
         </div>
       </div>
 
@@ -153,10 +260,10 @@ export default function Dashboard() {
         {subjects.length === 0 ? (
           <div className="bg-indigo-50/30 rounded-3xl p-8 text-center border-2 border-dashed border-indigo-200">
             <div className="flex justify-center mb-3">
-              <Bird className="w-12 h-12 text-indigo-300 opacity-80" />
+              <Mascot size={70} mood="sleep" animate={true} />
             </div>
             <p className="text-indigo-600 font-bold text-lg">U là trời... Sao trống trơn vậy nè?</p>
-            <p className="text-indigo-400 mt-1 font-medium text-sm">Thêm liền một môn học để chim còn có cái đu bám nha!</p>
+            <p className="text-indigo-400 mt-1 font-medium text-sm">Thêm liền một môn học để Bíp Bíp còn có cái đu bám nha!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

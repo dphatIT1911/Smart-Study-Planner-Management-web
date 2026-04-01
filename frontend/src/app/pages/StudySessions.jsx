@@ -10,7 +10,7 @@ import { Plus, Clock, Calendar, TrendingUp, Loader2 } from 'lucide-react';
 import { api } from '../api';
 import { format, subMinutes } from 'date-fns';
 import { toast } from 'sonner';
-import { Bird } from 'lucide-react';
+import Mascot from '../components/mascot/Mascot';
 
 export default function StudySessions() {
   const [sessions, setSessions] = useState([]);
@@ -245,12 +245,12 @@ export default function StudySessions() {
         {sessions.length === 0 ? (
            <Card className="p-12 text-center border-dashed border-2 bg-indigo-50/30 border-indigo-200">
               <div className="flex flex-col items-center gap-3">
-                <div className="w-16 h-16 bg-white rounded-3xl shadow-sm flex items-center justify-center rotate-12">
-                  <Bird className="w-8 h-8 text-indigo-400" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-indigo-900 mt-2">Chưa có ai học hết trơn!</h3>
-                  <p className="text-indigo-500 font-medium text-sm mt-1">Bấm nút "Ghi lại" và cày ngay cho tuiii nào 🚀</p>
+                 <div className="w-20 h-20 flex items-center justify-center">
+                  <Mascot size={70} mood="sleep" animate={true} />
+                 </div>
+                 <div>
+                   <h3 className="text-xl font-bold text-indigo-900 mt-2">Chưa có ai học hết trơn!</h3>
+                   <p className="text-indigo-500 font-medium text-sm mt-1">Bấm nút "Ghi lại" và cày ngay cho Bíp Bíp vui nào 🚀</p>
                 </div>
               </div>
            </Card>
