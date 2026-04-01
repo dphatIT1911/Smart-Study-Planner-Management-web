@@ -1,18 +1,41 @@
 services:
+  # ---------------------------------------------
+  # 1. BACKEND SERVICE (Docker FastAPI)
+  # ---------------------------------------------
   - type: web
     name: smart-study-backend
     runtime: docker
     plan: free
-    region: singapore # Chọn khu vực gần Việt Nam để tốc độ nhanh hơn
-    rootDir: backend # Chỉ định Render làm việc trong thư mục backend
+    region: singapore
+    rootDir: backend
+    preDeployCommand: alembic upgrade head
+    healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        sync: false # Bạn sẽ dán URL Database của mình vào dashboard Render
+        sync: false
       - key: SECRET_KEY
-        generateValue: true # Render sẽ tự động sinh mã bí mật cho bạn
+        generateValue: true
       - key: ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: "10080" # 7 days
+        value: "10080"
       - key: PORT
         value: "8000"
+
+  # ---------------------------------------------
+  # 2. FRONTEND SERVICE (Vite Static Site)
+  # ---------------------------------------------
+  - type: web
+    name: smart-study-frontend
+    env: static
+    plan: free
+    region: singapore
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: smart-study-backend
+          envVarKey: RENDER_EXTERNAL_URL

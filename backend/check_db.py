@@ -50,20 +50,27 @@ def check_database():
                 except Exception as table_err:
                     print(f"  - [{table}]: Loi truy van ({str(table_err)})")
             
-            # Xem thu 5 user
-            user_table_name = next((t for t in tables if t.lower() == 'user' or t.lower() == 'users'), None)
-            if user_table_name:
-                print(f"\nDanh sach 5 User dau hien co:")
+            # Xem toàn bộ dữ liệu ở tất cả các bảng
+            print("\n" + "="*40)
+            print("[TONG HOP TOAN BO DU LIEU]")
+            print("="*40)
+            
+            for table in tables:
+                print(f"\n[BANG: {table.upper()}]")
+                print("-" * 30)
                 try:
-                    result = connection.execute(text(f"SELECT id, email, name FROM \"{user_table_name}\" LIMIT 5"))
+                    result = connection.execute(text(f"SELECT * FROM \"{table}\""))
                     rows = result.all()
                     if rows:
                         for row in rows:
-                            print(f"    ID: {row.id} | Email: {row.email} | Name: {row.name}")
+                            # In các cột của bản ghi dưới dạng chuỗi
+                            print(" | ".join([f"{key}: {val}" for key, val in row._mapping.items()]))
                     else:
-                        print("    (Trong)")
-                except Exception as user_err:
-                    print(f"    Loi lay du lieu user: {str(user_err)}")
+                        print("  (Bảng đang trống)")
+                except Exception as e:
+                    print(f"  Lỗi lấy dữ liệu bảng {table}: {e}")
+                    
+            print("\n" + "="*40)
 
     except Exception as e:
         print(f"Loi: {str(e)}")
