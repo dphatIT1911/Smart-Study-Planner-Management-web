@@ -3,6 +3,7 @@ import StatCard from './StatCard';
 import SubjectCard from './SubjectCard';
 import TaskList from './TaskList';
 import SessionTracker from './SessionTracker';
+import { Badge } from '../ui/badge';
 import { Clock, Target, CheckCircle2, TrendingUp, Loader2, Bird } from 'lucide-react';
 import { api } from '../../api';
 
