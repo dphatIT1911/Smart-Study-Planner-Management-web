@@ -8,35 +8,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Calendar, Clock, CheckSquare, Plus, Check, Play, Pause, Save, X } from 'lucide-react';
 import { Checkbox } from '../ui/checkbox';
 
-const priorityOptions = ['Thấp', 'Trung bình', 'Cao'];
-const statusOptions = ['Cần làm', 'Đang làm', 'Hoàn thành'];
-
-const subjectOptions = [
-  { id: '1', name: 'Toán Cao Cấp' },
-  { id: '2', name: 'Cấu Trúc Dữ Liệu' },
-  { id: '3', name: 'Phát Triển Web' },
-  { id: '4', name: 'Hệ Quản Trị CSDL' }
+const priorityOptions = [
+  { value: 'LOW', label: 'Thấp' },
+  { value: 'MED', label: 'Trung bình' },
+  { value: 'HIGH', label: 'Cao' }
 ];
 
-export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) {
-  const [editedTask, setEditedTask] = useState(task || {});
+const statusOptions = [
+  { value: 'TODO', label: 'Cần làm' },
+  { value: 'IN_PROGRESS', label: 'Đang làm' },
+  { value: 'DONE', label: 'Hoàn thành' }
+];
+
+export default function TaskDetailModal({ task, subjects = [], isOpen, onOpenChange, onSave }) {
+  const [editedTask, setEditedTask] = useState({});
   const [pomodoroTarget, setPomodoroTarget] = useState(25);
   const [pomodoroActive, setPomodoroActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [subtasks, setSubtasks] = useState([]);
 
   useEffect(() => {
-    if (task) {
-      setEditedTask(task);
-      setSubtasks(task.subtasks || [
-        { id: 1, text: 'Nghiên cứu tài liệu', completed: false },
-        { id: 2, text: 'Viết nháp', completed: false },
-        { id: 3, text: 'Chỉnh sửa', completed: true },
-      ]);
-      setPomodoroActive(false);
-      setTimeLeft(pomodoroTarget * 60);
+    if (isOpen) {
+      if (task) {
+        setEditedTask({
+          ...task,
+          subject_id: task.subject_id?.toString() || 'none'
+        });
+        setSubtasks(task.subtasks || []);
+        setPomodoroActive(false);
+        setTimeLeft(pomodoroTarget * 60);
+      } else {
+        setEditedTask({
+          title: '',
+          description: '',
+          status: 'TODO',
+          priority: 'MED',
+          subject_id: 'none',
+          estimated_minutes: 25,
+        });
+        setSubtasks([]);
+      }
     }
-  }, [task, pomodoroTarget]);
+  }, [task, isOpen, pomodoroTarget]);
 
   useEffect(() => {
     let interval = null;
@@ -59,10 +72,18 @@ export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) 
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  if (!task) return null;
-
   const handleSave = () => {
-    if (onSave) onSave({ ...editedTask, subtasks });
+    if (!editedTask.title?.trim()) {
+      alert("Vui lòng nhập tên công việc");
+      return;
+    }
+    if (onSave) {
+      onSave({ 
+        ...editedTask, 
+        subject_id: editedTask.subject_id !== 'none' ? parseInt(editedTask.subject_id) : null,
+        subtasks 
+      });
+    }
     onOpenChange(false);
   };
 
@@ -73,8 +94,9 @@ export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) 
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <CheckSquare className="w-5 h-5 text-indigo-600" />
             <Input
-              value={editedTask.title}
+              value={editedTask.title || ''}
               onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+              placeholder="Tên công việc mới..."
               className="text-2xl font-bold border-none shadow-none focus-visible:ring-1 focus-visible:ring-indigo-200 px-0 rounded-none w-full"
             />
           </DialogTitle>
@@ -91,7 +113,7 @@ export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) 
                 value={editedTask.description || ''}
                 onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
                 className="min-h-[100px] resize-none"
-                placeholder="Chưa có mô tả cho công việc này. Thêm mô tả công việc..."
+                placeholder="Thêm chi tiết về công việc này..."
               />
             </div>
 
@@ -115,6 +137,7 @@ export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) 
               </div>
 
               <div className="space-y-2">
+                {subtasks.length === 0 && <p className="text-sm text-gray-400 italic">Chưa có danh sách việc cần làm con.</p>}
                 {subtasks.map((st) => (
                   <div key={st.id} className="flex items-center gap-2 group">
                     <Checkbox
@@ -147,6 +170,7 @@ export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) 
             </div>
 
             {/* Pomodoro Timer Placeholder */}
+            {task && (
             <div className="bg-indigo-50 rounded-xl p-6 border border-indigo-100 flex flex-col items-center justify-center text-center">
               <h3 className="text-lg font-bold text-indigo-900 mb-2">Đồng hồ Pomodoro</h3>
               <div className="text-4xl font-mono font-bold text-indigo-600 my-4">
@@ -166,6 +190,7 @@ export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) 
                 </Button>
               </div>
             </div>
+            )}
           </div>
 
           <div className="space-y-6">
@@ -173,14 +198,14 @@ export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) 
             <div className="space-y-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-gray-500 uppercase">Trạng thái</label>
-                <Select value={editedTask.status} onValueChange={(val) => setEditedTask({ ...editedTask, status: val })}>
+                <Select value={editedTask.status || 'TODO'} onValueChange={(val) => setEditedTask({ ...editedTask, status: val })}>
                   <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Chọn trạng thái" />
                   </SelectTrigger>
                   <SelectContent>
                     {statusOptions.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -189,14 +214,14 @@ export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) 
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-gray-500 uppercase">Ưu tiên</label>
-                <Select value={editedTask.priority} onValueChange={(val) => setEditedTask({ ...editedTask, priority: val })}>
+                <Select value={editedTask.priority || 'MED'} onValueChange={(val) => setEditedTask({ ...editedTask, priority: val })}>
                   <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Chọn độ ưu tiên" />
                   </SelectTrigger>
                   <SelectContent>
                     {priorityOptions.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
+                      <SelectItem key={p.value} value={p.value}>
+                        {p.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -205,13 +230,14 @@ export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) 
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-gray-500 uppercase">Môn học</label>
-                <Select value={editedTask.subject} onValueChange={(val) => setEditedTask({ ...editedTask, subject: val })}>
+                <Select value={editedTask.subject_id || 'none'} onValueChange={(val) => setEditedTask({ ...editedTask, subject_id: val })}>
                   <SelectTrigger className="w-full bg-white text-left truncate">
                     <SelectValue placeholder="Chọn môn học" />
                   </SelectTrigger>
                   <SelectContent>
-                    {subjectOptions.map((sub) => (
-                      <SelectItem key={sub.name} value={sub.name}>
+                    <SelectItem value="none">-- Không phân loại --</SelectItem>
+                    {subjects?.map((sub) => (
+                      <SelectItem key={sub.id} value={sub.id.toString()}>
                         {sub.name}
                       </SelectItem>
                     ))}
@@ -224,7 +250,7 @@ export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) 
                   <Calendar className="w-3.5 h-3.5" />
                   Hạn chót
                 </label>
-                <Input type="text" value={editedTask.dueDate} onChange={(e) => setEditedTask({ ...editedTask, dueDate: e.target.value })} className="bg-white" />
+                <Input type="date" value={editedTask.due_date ? editedTask.due_date.split('T')[0] : ''} onChange={(e) => setEditedTask({ ...editedTask, due_date: e.target.value ? new Date(e.target.value).toISOString() : null })} className="bg-white" />
               </div>
 
               <div className="space-y-1">
@@ -232,13 +258,13 @@ export default function TaskDetailModal({ task, isOpen, onOpenChange, onSave }) 
                   <Clock className="w-3.5 h-3.5" />
                   Thời gian dự kiến (phút)
                 </label>
-                <Input type="number" value={editedTask.estimatedMinutes} onChange={(e) => setEditedTask({ ...editedTask, estimatedMinutes: e.target.value })} className="bg-white" />
+                <Input type="number" min="0" value={editedTask.estimated_minutes || 0} onChange={(e) => setEditedTask({ ...editedTask, estimated_minutes: parseInt(e.target.value) || 0 })} className="bg-white" />
               </div>
             </div>
 
             <Button onClick={handleSave} className="w-full bg-indigo-600 hover:bg-indigo-700 gap-2">
               <Save className="w-4 h-4" />
-              Lưu thay đổi
+              Lưu công việc
             </Button>
           </div>
         </div>

@@ -9,6 +9,7 @@ import { api } from '../api';
 
 export default function TaskListPage() {
   const [tasks, setTasks] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -18,30 +19,30 @@ export default function TaskListPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchTasks = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await api.tasks.getAll();
-        setTasks(data);
+        const [tasksData, subjectsData] = await Promise.all([
+          api.tasks.getAll(),
+          api.subjects.getAll()
+        ]);
+        setTasks(tasksData);
+        setSubjects(subjectsData);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch tasks:', err);
-        setError('Không thể tải danh sách công việc. Vui lòng thử lại.');
+        console.error('Failed to fetch data:', err);
+        setError('Không thể tải dữ liệu. Vui lòng thử lại.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTasks();
+    fetchData();
   }, []);
-
-  // Extract unique subjects for the filter
-  const subjects = [...new Set(tasks.map(t => t.subject?.name || t.subject || 'Chưa phân loại').filter(Boolean))];
 
   const filteredTasks = tasks.filter((task) => {
     if (selectedSubject !== 'all') {
-      const subjectName = task.subject?.name || task.subject || 'Chưa phân loại';
-      if (subjectName !== selectedSubject) {
+      if (task.subject_id?.toString() !== selectedSubject.toString()) {
         return false;
       }
     }
@@ -53,8 +54,19 @@ export default function TaskListPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveTask = (updatedTask) => {
-    setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+  const handleSaveTask = async (taskData) => {
+    try {
+      if (taskData.id) {
+        const updatedTask = await api.tasks.update(taskData.id, taskData);
+        setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+      } else {
+        const user = JSON.parse(localStorage.getItem('user'));
+        const newTask = await api.tasks.create({...taskData, user_id: user?.id});
+        setTasks([...tasks, newTask]);
+      }
+    } catch (err) {
+      alert(err.message || 'Không thể lưu công việc');
+    }
   };
 
   if (loading) {
@@ -102,7 +114,7 @@ export default function TaskListPage() {
             <SelectContent>
               <SelectItem value="all" className="font-medium text-slate-600">Tất cả môn học</SelectItem>
               {subjects.map(subject => (
-                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                <SelectItem key={subject.id} value={subject.id.toString()}>{subject.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -145,6 +157,7 @@ export default function TaskListPage() {
 
       <TaskDetailModal 
         task={selectedTask} 
+        subjects={subjects}
         isOpen={isModalOpen} 
         onOpenChange={setIsModalOpen} 
         onSave={handleSaveTask}
