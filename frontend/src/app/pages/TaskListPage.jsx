@@ -6,6 +6,7 @@ import TaskBoardView from '../components/tasks/TaskBoardView';
 import TaskTableView from '../components/tasks/TaskTableView';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
 import { api } from '../api';
+import { toast } from 'sonner';
 
 export default function TaskListPage() {
   const [tasks, setTasks] = useState([]);
@@ -60,12 +61,12 @@ export default function TaskListPage() {
         const updatedTask = await api.tasks.update(taskData.id, taskData);
         setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
       } else {
-        const user = JSON.parse(localStorage.getItem('user'));
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
         const newTask = await api.tasks.create({...taskData, user_id: user?.id});
         setTasks([...tasks, newTask]);
       }
     } catch (err) {
-      alert(err.message || 'Không thể lưu công việc');
+      toast.error('Lỗi khi lưu', { description: err.message || 'Không thể lưu công việc do lỗi kết nối' });
     }
   };
 

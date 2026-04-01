@@ -5,8 +5,10 @@ import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '../ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Calendar, Clock, CheckSquare, Plus, Check, Play, Pause, Save, X } from 'lucide-react';
+import { Calendar, Clock, CheckSquare, Plus, Check, Play, Pause, Save, X, Lightbulb } from 'lucide-react';
 import { Checkbox } from '../ui/checkbox';
+import confetti from 'canvas-confetti';
+import { toast } from 'sonner';
 
 const priorityOptions = [
   { value: 'LOW', label: 'Thấp' },
@@ -59,6 +61,11 @@ export default function TaskDetailModal({ task, subjects = [], isOpen, onOpenCha
       }, 1000);
     } else if (timeLeft === 0) {
       setPomodoroActive(false);
+      // Play a tiny confetti when pomodoro ends
+      if (pomodoroActive) {
+         confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+         toast.success('Hết giờ rùi!', { description: 'Nghỉ giải lao xíu nha.' });
+      }
     }
 
     return () => {
@@ -74,10 +81,23 @@ export default function TaskDetailModal({ task, subjects = [], isOpen, onOpenCha
 
   const handleSave = () => {
     if (!editedTask.title?.trim()) {
-      alert("Vui lòng nhập tên công việc");
+      toast.error('Opps!', { description: "Quên nhập tên công việc rồi nè!" });
       return;
     }
     if (onSave) {
+      if (editedTask.status === 'DONE' && task?.status !== 'DONE') {
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+        toast.success('Xuất sắc! 🎉', { description: 'Bạn lại vượt qua một task nữa rùi!' });
+      } else if (!task) {
+        toast.success('Đã thêm thành công!', { description: 'Chiến thôi nào!' });
+      } else {
+         toast.success('Đã cập nhật!', { description: 'Thông tin mới đã được lưu.' });
+      }
+
       onSave({ 
         ...editedTask, 
         subject_id: editedTask.subject_id !== 'none' ? parseInt(editedTask.subject_id) : null,

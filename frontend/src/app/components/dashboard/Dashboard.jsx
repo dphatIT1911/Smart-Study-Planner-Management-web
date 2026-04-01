@@ -3,10 +3,11 @@ import StatCard from './StatCard';
 import SubjectCard from './SubjectCard';
 import TaskList from './TaskList';
 import SessionTracker from './SessionTracker';
-import { Clock, Target, CheckCircle2, TrendingUp, Loader2 } from 'lucide-react';
+import { Clock, Target, CheckCircle2, TrendingUp, Loader2, Bird } from 'lucide-react';
 import { api } from '../../api';
 
 export default function Dashboard() {
+  const [greeting, setGreeting] = useState('');
   const [stats, setStats] = useState({
     totalStudyTime: 0,
     estimatedTime: 0,
@@ -53,6 +54,15 @@ export default function Dashboard() {
     };
 
     fetchDashboardData();
+
+    // Determine Gen Z greeting based on time
+    const hour = new Date().getHours();
+    if (hour < 5) setGreeting('Cú đêm ơi, chạy deadline rực rỡ nhé! 🦉');
+    else if (hour < 11) setGreeting('Sáng rồi đồng chí ơi, bật mode năng suất thuiii ⚡');
+    else if (hour < 14) setGreeting('Trưa rồi nạp năng lượng rùi cày tiếp nha 🍔');
+    else if (hour < 18) setGreeting('Trời chiều mát mẻ, dứt điểm deadline nào 🌅');
+    else setGreeting('Lên đèn lên đồ... à nhầm lên bàn học thui! 🚀');
+
   }, []);
 
   if (loading) {
@@ -71,9 +81,19 @@ export default function Dashboard() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-black text-gray-900 tracking-tight">Bảng điều khiển</h1>
-        <p className="text-gray-500 mt-2 font-medium">Chào mừng trở lại! Đây là tổng quan học tập của bạn hôm nay.</p>
+      <div className="mb-10 flex items-center justify-between bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-4xl font-black text-indigo-900 tracking-tight">Trạm Học Tập</h1>
+            <Badge variant="outline" className="bg-indigo-100 text-indigo-700 border-indigo-200 uppercase font-black text-xs px-2 py-0.5 rounded-full animate-pulse">Lv.1 Tân Binh</Badge>
+          </div>
+          <p className="text-indigo-600/80 mt-1 font-semibold text-lg flex items-center gap-2">
+             {greeting}
+          </p>
+        </div>
+        <div className="hidden sm:flex h-20 w-20 bg-white rounded-full items-center justify-center shadow-sm border border-indigo-100">
+           <Bird className="w-10 h-10 text-indigo-500 animate-bounce" />
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -115,8 +135,12 @@ export default function Dashboard() {
         </div>
         
         {subjects.length === 0 ? (
-          <div className="bg-gray-50 rounded-2xl p-8 text-center border-2 border-dashed border-gray-200">
-            <p className="text-gray-500 font-medium">Chưa tìm thấy môn học nào. Hãy thêm môn học để xem tại đây.</p>
+          <div className="bg-indigo-50/30 rounded-3xl p-8 text-center border-2 border-dashed border-indigo-200">
+            <div className="flex justify-center mb-3">
+              <Bird className="w-12 h-12 text-indigo-300 opacity-80" />
+            </div>
+            <p className="text-indigo-600 font-bold text-lg">U là trời... Sao trống trơn vậy nè?</p>
+            <p className="text-indigo-400 mt-1 font-medium text-sm">Thêm liền một môn học để chim còn có cái đu bám nha!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

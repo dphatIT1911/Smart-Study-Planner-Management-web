@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Plus, Clock, Calendar, TrendingUp, Loader2 } from 'lucide-react';
 import { api } from '../api';
 import { format, subMinutes } from 'date-fns';
+import { toast } from 'sonner';
+import { Bird } from 'lucide-react';
 
 export default function StudySessions() {
   const [sessions, setSessions] = useState([]);
@@ -65,7 +67,7 @@ export default function StudySessions() {
   const handleCreateSession = async (e) => {
     e.preventDefault();
     if (!newSession.task_id) {
-      alert("Vui lòng chọn một công việc!");
+      toast.error('Opps!', { description: "Quên chọn công việc mất rồi kìa!" });
       return;
     }
     
@@ -85,9 +87,10 @@ export default function StudySessions() {
       
       setIsModalOpen(false);
       setNewSession({ task_id: '', duration_minutes: 25, notes: '' });
+      toast.success('Cháy quá bạn ơi! 🔥', { description: 'Giữ vững phong độ này nhé.' });
       await fetchSessions();
     } catch (err) {
-      alert(err.message || 'Không thể ghi lại phiên học');
+      toast.error('Lỗi rùi!', { description: err.message || 'Không thể bay lên mây để lưu thông tin' });
     } finally {
       setIsSubmitting(false);
     }
@@ -240,14 +243,14 @@ export default function StudySessions() {
       {/* Sessions List */}
       <div className="space-y-4">
         {sessions.length === 0 ? (
-           <Card className="p-12 text-center border-dashed border-2 bg-gray-50/30">
+           <Card className="p-12 text-center border-dashed border-2 bg-indigo-50/30 border-indigo-200">
               <div className="flex flex-col items-center gap-3">
-                <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center">
-                  <Clock className="w-7 h-7 text-gray-300" />
+                <div className="w-16 h-16 bg-white rounded-3xl shadow-sm flex items-center justify-center rotate-12">
+                  <Bird className="w-8 h-8 text-indigo-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Chưa có phiên học nào được ghi lại</h3>
-                  <p className="text-gray-500 text-sm">Bắt đầu một phiên học để theo dõi dữ liệu của bạn.</p>
+                  <h3 className="text-xl font-bold text-indigo-900 mt-2">Chưa có ai học hết trơn!</h3>
+                  <p className="text-indigo-500 font-medium text-sm mt-1">Bấm nút "Ghi lại" và cày ngay cho tuiii nào 🚀</p>
                 </div>
               </div>
            </Card>
