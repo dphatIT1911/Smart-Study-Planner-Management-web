@@ -15,32 +15,32 @@ const mockStats = {
 const mockSubjects = [
 {
   id: '1',
-  name: 'Advanced Mathematics',
-  semester: 'Spring 2026',
+  name: 'Toán Cao Cấp',
+  semester: 'Kỳ Xuân 2026',
   color: '#6366f1', // Indigo
   targetScore: 95,
   currentProgress: 78
 },
 {
   id: '2',
-  name: 'Data Structures',
-  semester: 'Spring 2026',
+  name: 'Cấu Trúc Dữ Liệu',
+  semester: 'Kỳ Xuân 2026',
   color: '#8b5cf6', // Purple
   targetScore: 90,
   currentProgress: 85
 },
 {
   id: '3',
-  name: 'Web Development',
-  semester: 'Spring 2026',
+  name: 'Phát Triển Web',
+  semester: 'Kỳ Xuân 2026',
   color: '#ec4899', // Pink
   targetScore: 92,
   currentProgress: 65
 },
 {
   id: '4',
-  name: 'Database Systems',
-  semester: 'Spring 2026',
+  name: 'Hệ Quản Trị CSDL',
+  semester: 'Kỳ Xuân 2026',
   color: '#14b8a6', // Teal
   targetScore: 88,
   currentProgress: 72
@@ -50,49 +50,49 @@ const mockSubjects = [
 const mockTasks = [
 {
   id: '1',
-  title: 'Complete Chapter 5 Exercises',
-  subject: 'Advanced Mathematics',
-  dueDate: 'Mar 28, 2026',
-  priority: 'High',
-  status: 'In-progress',
+  title: 'Hoàn thành bài tập chương 5',
+  subject: 'Toán Cao Cấp',
+  dueDate: '28 Th03, 2026',
+  priority: 'Cao',
+  status: 'Đang làm',
   estimatedMinutes: 90
 },
 {
   id: '2',
-  title: 'Build Binary Search Tree',
-  subject: 'Data Structures',
-  dueDate: 'Mar 29, 2026',
-  priority: 'Med',
-  status: 'To-do',
+  title: 'Cài đặt cây tìm kiếm nhị phân',
+  subject: 'Cấu Trúc Dữ Liệu',
+  dueDate: '29 Th03, 2026',
+  priority: 'Trung bình',
+  status: 'Cần làm',
   estimatedMinutes: 120
 },
 {
   id: '3',
-  title: 'Design Portfolio Website',
-  subject: 'Web Development',
-  dueDate: 'Mar 30, 2026',
-  priority: 'Med',
-  status: 'In-progress',
+  title: 'Thiết kế website cá nhân',
+  subject: 'Phát Triển Web',
+  dueDate: '30 Th03, 2026',
+  priority: 'Trung bình',
+  status: 'Đang làm',
   estimatedMinutes: 180
 },
 {
   id: '4',
-  title: 'SQL Query Practice',
-  subject: 'Database Systems',
-  dueDate: 'Mar 27, 2026',
-  priority: 'Low',
-  status: 'To-do',
+  title: 'Thực hành truy vấn SQL',
+  subject: 'Hệ Quản Trị CSDL',
+  dueDate: '27 Th03, 2026',
+  priority: 'Thấp',
+  status: 'Cần làm',
   estimatedMinutes: 60
 }];
 
 
 const mockRecentSession = {
   id: '1',
-  subject: 'Advanced Mathematics',
+  subject: 'Toán Cao Cấp',
   subjectColor: '#6366f1',
-  date: 'Mar 25, 2026',
+  date: '25 Th03, 2026',
   durationMinutes: 85,
-  notes: 'Completed calculus problems, focused on integration techniques.'
+  notes: 'Hoàn thành bài tập giải tích, tập trung vào kỹ thuật tích phân.'
 };
 
 export default function Dashboard() {
@@ -100,37 +100,37 @@ export default function Dashboard() {
     <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome back! Here's your study overview.</p>
+        <h1 className="text-3xl font-bold text-gray-900">Bảng điều khiển</h1>
+        <p className="text-gray-600 mt-2">Chào mừng trở lại! Đây là tổng quan học tập của bạn.</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
-          title="Total Study Time"
-          value={`${mockStats.totalStudyTime} min`}
-          subtitle={`${mockStats.estimatedTime} min estimated`}
+          title="Tổng thời gian học"
+          value={`${mockStats.totalStudyTime} phút`}
+          subtitle={`Dự kiến ${mockStats.estimatedTime} phút`}
           icon={Clock}
           iconColor="bg-indigo-100 text-indigo-600" />
         
         <StatCard
-          title="Completed Tasks"
+          title="Công việc đã xong"
           value={mockStats.completedTasks}
-          subtitle="This month"
+          subtitle="Tháng này"
           icon={CheckCircle2}
           iconColor="bg-green-100 text-green-600" />
         
         <StatCard
-          title="Active Subjects"
+          title="Môn học đang học"
           value={mockStats.activeSubjects}
-          subtitle="Spring 2026"
+          subtitle="Kỳ Xuân 2026"
           icon={Target}
           iconColor="bg-purple-100 text-purple-600" />
         
         <StatCard
-          title="Progress Rate"
+          title="Tiến độ học tập"
           value={`${Math.round(mockStats.totalStudyTime / mockStats.estimatedTime * 100)}%`}
-          subtitle="On track"
+          subtitle="Đúng tiến độ"
           icon={TrendingUp}
           iconColor="bg-blue-100 text-blue-600" />
         
@@ -138,7 +138,7 @@ export default function Dashboard() {
 
       {/* Subject Overview */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">My Subjects</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Môn học của tôi</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {mockSubjects.map((subject) =>
           <SubjectCard

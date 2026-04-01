@@ -12,11 +12,11 @@ import { Avatar, AvatarFallback } from '../ui/avatar';
 
 
 const menuItems = [
-{ path: '/', label: 'Dashboard', icon: LayoutDashboard },
-{ path: '/subjects', label: 'My Subjects', icon: BookOpen },
-{ path: '/tasks', label: 'Task List', icon: CheckSquare },
-{ path: '/sessions', label: 'Study Sessions', icon: Clock },
-{ path: '/settings', label: 'Settings', icon: Settings }];
+  { path: '/', label: 'Bảng điều khiển', icon: LayoutDashboard },
+  { path: '/subjects', label: 'Môn học của tôi', icon: BookOpen },
+  { path: '/tasks', label: 'Danh sách công việc', icon: CheckSquare },
+  { path: '/sessions', label: 'Phiên học', icon: Clock },
+  { path: '/settings', label: 'Cài đặt', icon: Settings }];
 
 
 export default function Sidebar({ user, currentPath }) {
@@ -29,11 +29,11 @@ export default function Sidebar({ user, currentPath }) {
 
   const getInitials = (name) => {
     return name.
-    split(' ').
-    map((n) => n[0]).
-    join('').
-    toUpperCase().
-    slice(0, 2);
+      split(' ').
+      map((n) => n[0]).
+      join('').
+      toUpperCase().
+      slice(0, 2);
   };
 
   return (
@@ -60,12 +60,11 @@ export default function Sidebar({ user, currentPath }) {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-              isActive ?
-              'bg-indigo-50 text-indigo-600' :
-              'text-gray-700 hover:bg-gray-100'}`
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive ?
+                  'bg-indigo-50 text-indigo-600' :
+                  'text-gray-700 hover:bg-gray-100'}`
               }>
-              
+
               <Icon className="w-5 h-5" />
               <span className="font-medium">{item.label}</span>
             </Link>);
@@ -91,9 +90,9 @@ export default function Sidebar({ user, currentPath }) {
           variant="outline"
           size="sm"
           className="w-full justify-start gap-2">
-          
+
           <LogOut className="w-4 h-4" />
-          Sign Out
+          Đăng xuất
         </Button>
       </div>
     </aside>);

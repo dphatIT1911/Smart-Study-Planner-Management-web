@@ -17,22 +17,22 @@ import { Calendar, Clock } from 'lucide-react';
 
 
 const priorityColors = {
-  Low: 'bg-green-100 text-green-700 border-green-200',
-  Med: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  High: 'bg-red-100 text-red-700 border-red-200'
+  'Thấp': 'bg-green-100 text-green-700 border-green-200',
+  'Trung bình': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  'Cao': 'bg-red-100 text-red-700 border-red-200'
 };
 
 const statusColors = {
-  'To-do': 'bg-gray-100 text-gray-700 border-gray-200',
-  'In-progress': 'bg-blue-100 text-blue-700 border-blue-200',
-  'Done': 'bg-green-100 text-green-700 border-green-200'
+  'Cần làm': 'bg-gray-100 text-gray-700 border-gray-200',
+  'Đang làm': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Hoàn thành': 'bg-green-100 text-green-700 border-green-200'
 };
 
 export default function TaskList({ tasks }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Coming Up</CardTitle>
+        <CardTitle>Sắp tới</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -62,7 +62,7 @@ export default function TaskList({ tasks }) {
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>{task.estimatedMinutes} min</span>
+                  <span>{task.estimatedMinutes} phút</span>
                 </div>
               </div>
             </div>

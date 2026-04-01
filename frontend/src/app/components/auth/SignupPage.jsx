@@ -27,15 +27,75 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [timezone, setTimezone] = useState('UTC');
 
-  const handleSignup = (e) => {
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async (e) => {
     e.preventDefault();
-    // Mock signup - in real app, this would create account in backend
-    localStorage.setItem('user', JSON.stringify({
-      name,
-      email,
-      timezone
-    }));
-    navigate('/');
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:8000/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          timezone,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Tạo tài khoản thất bại');
+      }
+
+      // Auto login after successful signup
+      const formData = new URLSearchParams();
+      formData.append('username', email);
+      formData.append('password', password);
+
+      const loginResp = await fetch('http://localhost:8000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData,
+      });
+
+      if (!loginResp.ok) {
+        // If login fails, redirect to login page
+        navigate('/login');
+        return;
+      }
+
+      const { access_token } = await loginResp.json();
+      localStorage.setItem('token', access_token);
+
+      const profileResponse = await fetch('http://localhost:8000/auth/profile', {
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+        },
+      });
+
+      if (!profileResponse.ok) {
+        navigate('/login');
+        return;
+      }
+
+      const userProfile = await profileResponse.json();
+      localStorage.setItem('user', JSON.stringify(userProfile));
+
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Có lỗi xảy ra trong quá trình đăng ký');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,13 +105,18 @@ export default function SignupPage() {
           <div className="mx-auto w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
-          <CardTitle className="text-2xl">Create your account</CardTitle>
-          <CardDescription>Start organizing your study schedule today</CardDescription>
+          <CardTitle className="text-2xl">Tạo tài khoản</CardTitle>
+          <CardDescription>Bắt đầu lên kế hoạch học tập ngay hôm nay</CardDescription>
         </CardHeader>
         <form onSubmit={handleSignup}>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-100">
+                {error}
+              </div>
+            )}
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">Họ và tên</Label>
               <Input
                 id="name"
                 type="text"
@@ -73,7 +138,7 @@ export default function SignupPage() {
               
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Mật khẩu</Label>
               <Input
                 id="password"
                 type="password"
@@ -85,7 +150,7 @@ export default function SignupPage() {
               
             </div>
             <div className="space-y-2">
-              <Label htmlFor="timezone">Timezone</Label>
+              <Label htmlFor="timezone">Múi giờ</Label>
               <Select value={timezone} onValueChange={setTimezone}>
                 <SelectTrigger id="timezone">
                   <SelectValue />
@@ -101,13 +166,13 @@ export default function SignupPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700">
-              Create Account
+            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 hover:text-white" disabled={loading}>
+              {loading ? 'Đang đăng ký...' : 'Đăng ký'}
             </Button>
             <p className="text-sm text-center text-gray-600">
-              Already have an account?{' '}
+              Đã có tài khoản?{' '}
               <Link to="/login" className="text-indigo-600 hover:underline">
-                Sign in
+                Đăng nhập
               </Link>
             </p>
           </CardFooter>
