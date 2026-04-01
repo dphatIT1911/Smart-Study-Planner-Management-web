@@ -5,6 +5,16 @@ from app.schemas.study_session import StudySessionCreate
 from app.services.base import CRUDBase
 
 class CRUDStudySession(CRUDBase[StudySession, StudySessionCreate, StudySessionCreate]):
+    def get_multi_by_owner(
+        self, db: Session, *, user_id: int, skip: int = 0, limit: int = 100
+    ):
+        return db.query(StudySession)\
+            .join(Task)\
+            .filter(Task.user_id == user_id)\
+            .offset(skip)\
+            .limit(limit)\
+            .all()
+
     def create_session(self, db: Session, *, obj_in: StudySessionCreate, user_id: int):
         # Additional validation happens in the router directly or here if preferred
         # Let's perform the insert and update in one transaction.

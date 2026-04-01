@@ -4,15 +4,15 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Loader2, AlertCircle } from 'lucide-react';
+import { api } from '../../api';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -20,44 +20,23 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Create x-www-form-urlencoded data expected by OAuth2PasswordRequestForm
-      const formData = new URLSearchParams();
+      if (!email || !password) {
+        throw new Error('Vui lòng nhập Email và Mật khẩu');
+      }
+
+      const formData = new FormData();
       formData.append('username', email);
       formData.append('password', password);
 
-      const loginResponse = await fetch('http://localhost:8000/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData,
-      });
-
-      if (!loginResponse.ok) {
-        const errorData = await loginResponse.json();
-        throw new Error(errorData.detail || 'Đăng nhập thất bại');
-      }
-
-      const { access_token } = await loginResponse.json();
-      localStorage.setItem('token', access_token);
-
-      // Fetch user profile
-      const profileResponse = await fetch('http://localhost:8000/auth/profile', {
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-        },
-      });
-
-      if (!profileResponse.ok) {
-        throw new Error('Không thể tải thông tin cá nhân');
-      }
-
-      const userProfile = await profileResponse.json();
-      localStorage.setItem('user', JSON.stringify(userProfile));
+      const data = await api.login(formData);
+      localStorage.setItem('token', data.access_token);
+      
+      const profile = await api.getProfile();
+      localStorage.setItem('user', JSON.stringify(profile));
       
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Có lỗi xảy ra trong quá trình đăng nhập');
+      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
     } finally {
       setLoading(false);
     }
@@ -76,8 +55,9 @@ export default function LoginPage() {
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-100">
-                {error}
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2 text-sm animate-in fade-in slide-in-from-top-1">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <p>{error}</p>
               </div>
             )}
             <div className="space-y-2">
@@ -88,6 +68,7 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
                 required />
               
             </div>
@@ -99,18 +80,30 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
                 required />
               
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 hover:text-white" disabled={loading}>
-              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            <Button 
+              type="submit" 
+              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 transition-all font-semibold py-6 text-base"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Đang xác thực...
+                </>
+              ) : (
+                'Đăng nhập'
+              )}
             </Button>
             <p className="text-sm text-center text-gray-600">
               Chưa có tài khoản?{' '}
               <Link to="/signup" className="text-indigo-600 hover:underline">
-                Đăng ký
+                Đăng ký ngay
               </Link>
             </p>
           </CardFooter>
@@ -118,4 +111,4 @@ export default function LoginPage() {
       </Card>
     </div>);
 
-}
+}

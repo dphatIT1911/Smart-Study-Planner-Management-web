@@ -5,30 +5,22 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Loader2, AlertCircle } from 'lucide-react';
+import { api } from '../../api';
 
 const timezones = [
-'UTC',
-'America/New_York',
-'America/Chicago',
-'America/Denver',
-'America/Los_Angeles',
-'Europe/London',
-'Europe/Paris',
-'Asia/Tokyo',
-'Asia/Shanghai',
-'Australia/Sydney'];
-
+  'UTC', 'Asia/Ho_Chi_Minh', 'Asia/Tokyo', 'Asia/Shanghai', 
+  'Europe/London', 'Europe/Paris', 'America/New_York', 'America/Los_Angeles'
+];
 
 export default function SignupPage() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [timezone, setTimezone] = useState('UTC');
-
-  const [error, setError] = useState('');
+  const [timezone, setTimezone] = useState('Asia/Ho_Chi_Minh');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -36,63 +28,20 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          timezone,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Tạo tài khoản thất bại');
+      if (!name || !email || !password) {
+        throw new Error('Vui lòng điền đầy đủ các thông tin');
       }
 
-      // Auto login after successful signup
-      const formData = new URLSearchParams();
-      formData.append('username', email);
-      formData.append('password', password);
-
-      const loginResp = await fetch('http://localhost:8000/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData,
+      await api.register({
+        name,
+        email,
+        password,
+        timezone
       });
 
-      if (!loginResp.ok) {
-        // If login fails, redirect to login page
-        navigate('/login');
-        return;
-      }
-
-      const { access_token } = await loginResp.json();
-      localStorage.setItem('token', access_token);
-
-      const profileResponse = await fetch('http://localhost:8000/auth/profile', {
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-        },
-      });
-
-      if (!profileResponse.ok) {
-        navigate('/login');
-        return;
-      }
-
-      const userProfile = await profileResponse.json();
-      localStorage.setItem('user', JSON.stringify(userProfile));
-
-      navigate('/');
+      navigate('/login');
     } catch (err) {
-      setError(err.message || 'Có lỗi xảy ra trong quá trình đăng ký');
+      setError(err.message || 'Đăng ký thất bại. Email có thể đã tồn tại.');
     } finally {
       setLoading(false);
     }
@@ -111,8 +60,9 @@ export default function SignupPage() {
         <form onSubmit={handleSignup}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-100">
-                {error}
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2 text-sm">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <p>{error}</p>
               </div>
             )}
             <div className="space-y-2">
@@ -120,10 +70,12 @@ export default function SignupPage() {
               <Input
                 id="name"
                 type="text"
-                placeholder="John Doe"
+                placeholder="Ví dụ: Nguyễn Văn A"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required />
+                disabled={loading}
+                required
+                minLength={3} />
               
             </div>
             <div className="space-y-2">
@@ -134,6 +86,7 @@ export default function SignupPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
                 required />
               
             </div>
@@ -142,16 +95,17 @@ export default function SignupPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Tối thiểu 8 ký tự"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
                 required
-                minLength={6} />
+                minLength={8} />
               
             </div>
             <div className="space-y-2">
               <Label htmlFor="timezone">Múi giờ</Label>
-              <Select value={timezone} onValueChange={setTimezone}>
+              <Select value={timezone} onValueChange={setTimezone} disabled={loading}>
                 <SelectTrigger id="timezone">
                   <SelectValue />
                 </SelectTrigger>
@@ -166,13 +120,17 @@ export default function SignupPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 hover:text-white" disabled={loading}>
-              {loading ? 'Đang đăng ký...' : 'Đăng ký'}
+            <Button 
+              type="submit" 
+              className="w-full bg-indigo-600 hover:bg-indigo-700 h-11"
+              disabled={loading}
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Tạo tài khoản'}
             </Button>
             <p className="text-sm text-center text-gray-600">
               Đã có tài khoản?{' '}
               <Link to="/login" className="text-indigo-600 hover:underline">
-                Đăng nhập
+                Đăng nhập ngay
               </Link>
             </p>
           </CardFooter>
@@ -180,4 +138,4 @@ export default function SignupPage() {
       </Card>
     </div>);
 
-}
+}

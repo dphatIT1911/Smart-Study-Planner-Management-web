@@ -1,77 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Plus, LayoutGrid, List } from 'lucide-react';
+import { Plus, LayoutGrid, List, Loader2, AlertCircle } from 'lucide-react';
 import TaskBoardView from '../components/tasks/TaskBoardView';
 import TaskTableView from '../components/tasks/TaskTableView';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
-
-const mockTasks = [
-{
-  id: '1',
-  title: 'Hoàn thành bài tập chương 5',
-  subject: 'Toán Cao Cấp',
-  subjectColor: '#6366f1',
-  dueDate: '28 Th03, 2026',
-  priority: 'Cao',
-  status: 'Đang làm',
-  estimatedMinutes: 90
-},
-{
-  id: '2',
-  title: 'Cài đặt cây tìm kiếm nhị phân',
-  subject: 'Cấu Trúc Dữ Liệu',
-  subjectColor: '#8b5cf6',
-  dueDate: '29 Th03, 2026',
-  priority: 'Trung bình',
-  status: 'Cần làm',
-  estimatedMinutes: 120
-},
-{
-  id: '3',
-  title: 'Thiết kế website cá nhân',
-  subject: 'Phát Triển Web',
-  subjectColor: '#ec4899',
-  dueDate: '30 Th03, 2026',
-  priority: 'Trung bình',
-  status: 'Đang làm',
-  estimatedMinutes: 180
-},
-{
-  id: '4',
-  title: 'Thực hành truy vấn SQL',
-  subject: 'Hệ Quản Trị CSDL',
-  subjectColor: '#14b8a6',
-  dueDate: '27 Th03, 2026',
-  priority: 'Thấp',
-  status: 'Cần làm',
-  estimatedMinutes: 60
-},
-{
-  id: '5',
-  title: 'Bài tập Đại số tuyến tính',
-  subject: 'Toán Cao Cấp',
-  subjectColor: '#6366f1',
-  dueDate: '25 Th03, 2026',
-  priority: 'Cao',
-  status: 'Hoàn thành',
-  estimatedMinutes: 75
-}];
+import { api } from '../api';
 
 export default function TaskListPage() {
-  const [tasks, setTasks] = useState(mockTasks);
-  const [viewMode, setViewMode] = useState('board'); // 'board' or 'list'
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  const [viewMode, setViewMode] = useState('board');
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        setLoading(true);
+        const data = await api.tasks.getAll();
+        setTasks(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch tasks:', err);
+        setError('Không thể tải danh sách công việc. Vui lòng thử lại.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
   // Extract unique subjects for the filter
-  const subjects = [...new Set(tasks.map(t => t.subject))];
+  const subjects = [...new Set(tasks.map(t => t.subject?.name || t.subject || 'Chưa phân loại').filter(Boolean))];
 
   const filteredTasks = tasks.filter((task) => {
-    if (selectedSubject !== 'all' && task.subject !== selectedSubject) {
-      return false;
+    if (selectedSubject !== 'all') {
+      const subjectName = task.subject?.name || task.subject || 'Chưa phân loại';
+      if (subjectName !== selectedSubject) {
+        return false;
+      }
     }
     return true;
   });
@@ -85,6 +57,15 @@ export default function TaskListPage() {
     setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 gap-4">
+        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+        <p className="text-gray-500 font-medium italic">Đang tải danh sách công việc...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 max-w-7xl mx-auto h-[calc(100vh-theme(spacing.16))] flex flex-col">
       <div className="flex items-center justify-between xl:mb-8 mb-6 shrink-0">
@@ -97,6 +78,13 @@ export default function TaskListPage() {
           Thêm công việc
         </Button>
       </div>
+      
+      {error && (
+        <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg flex items-center gap-3 text-amber-800 mb-6">
+          <AlertCircle className="w-5 h-5" />
+          <p>{error}</p>
+        </div>
+      )}
 
       <div className="flex items-center justify-between mb-6 shrink-0 flex-wrap gap-4">
         {/* Subject Filter */}
