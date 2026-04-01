@@ -28,6 +28,7 @@ export default function Sidebar({ user, currentPath }) {
   };
 
   const getInitials = (name) => {
+    if (!name) return '?';
     return name.
       split(' ').
       map((n) => n[0]).
