@@ -4,6 +4,7 @@ import SubjectCard from './SubjectCard';
 import TaskList from './TaskList';
 import SessionTracker from './SessionTracker';
 import { Badge } from '../ui/badge';
+import { toast } from 'sonner';
 import { Clock, Target, CheckCircle2, TrendingUp, Loader2, Bird } from 'lucide-react';
 import { api } from '../../api';
 
@@ -58,11 +59,25 @@ export default function Dashboard() {
 
     // Determine Gen Z greeting based on time
     const hour = new Date().getHours();
-    if (hour < 5) setGreeting('Cú đêm ơi, chạy deadline rực rỡ nhé! 🦉');
-    else if (hour < 11) setGreeting('Sáng rồi đồng chí ơi, bật mode năng suất thuiii ⚡');
-    else if (hour < 14) setGreeting('Trưa rồi nạp năng lượng rùi cày tiếp nha 🍔');
-    else if (hour < 18) setGreeting('Trời chiều mát mẻ, dứt điểm deadline nào 🌅');
-    else setGreeting('Lên đèn lên đồ... à nhầm lên bàn học thui! 🚀');
+    let currentGreeting = '';
+    if (hour < 5) currentGreeting = 'Cú đêm ơi, chạy deadline rực rỡ nhé! 🦉';
+    else if (hour < 11) currentGreeting = 'Sáng rồi đồng chí ơi, bật mode năng suất thuiii ⚡';
+    else if (hour < 14) currentGreeting = 'Trưa rồi nạp năng lượng rùi cày tiếp nha 🍔';
+    else if (hour < 18) currentGreeting = 'Trời chiều mát mẻ, dứt điểm deadline nào 🌅';
+    else currentGreeting = 'Lên đèn lên đồ... à nhầm lên bàn học thui! 🚀';
+    
+    setGreeting(currentGreeting);
+
+    // Greet user precisely once per session
+    if (!sessionStorage.getItem('hasWelcomed_genz')) {
+      setTimeout(() => {
+        toast('Bíp bíp! 🐥', {
+          description: currentGreeting + ' Chúc bạn học thật vui!',
+          duration: 4000,
+        });
+        sessionStorage.setItem('hasWelcomed_genz', 'true');
+      }, 800);
+    }
 
   }, []);
 
