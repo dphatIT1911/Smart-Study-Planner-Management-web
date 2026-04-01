@@ -120,8 +120,7 @@ export const api = {
 
   sessions: {
     getAll: () => api.get('sessions/'),
-    start: (taskId) => api.post('sessions/start', { task_id: taskId }),
-    end: (sessionId) => api.post(`sessions/${sessionId}/end`, {}),
+    create: (data) => api.post('sessions/', data),
   },
 
   analytics: {

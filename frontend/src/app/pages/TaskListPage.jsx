@@ -73,7 +73,13 @@ export default function TaskListPage() {
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Danh sách công việc</h1>
           <p className="text-slate-500 mt-2">Sắp xếp và theo dõi bài tập của bạn</p>
         </div>
-        <Button className="bg-indigo-600 hover:bg-indigo-700 gap-2 shadow-sm font-medium">
+        <Button 
+          className="bg-indigo-600 hover:bg-indigo-700 gap-2 shadow-sm font-medium"
+          onClick={() => {
+            setSelectedTask(null);
+            setIsModalOpen(true);
+          }}
+        >
           <Plus className="w-4 h-4" />
           Thêm công việc
         </Button>

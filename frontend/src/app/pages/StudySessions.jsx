@@ -2,49 +2,98 @@ import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Plus, Clock, Calendar, TrendingUp, Loader2 } from 'lucide-react';
 import { api } from '../api';
-import { format } from 'date-fns';
+import { format, subMinutes } from 'date-fns';
 
 export default function StudySessions() {
   const [sessions, setSessions] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [newSession, setNewSession] = useState({
+    task_id: '',
+    duration_minutes: 25,
+    notes: ''
+  });
+
   const [stats, setStats] = useState({
     totalMinutes: 0,
     averagePerDay: 0,
     longestSession: 0
   });
 
-  useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        setLoading(true);
-        const data = await api.sessions.getAll();
-        setSessions(data);
+  const fetchSessions = async () => {
+    try {
+      setLoading(true);
+      const [sessionsData, tasksData] = await Promise.all([
+        api.sessions.getAll(),
+        api.tasks.getAll()
+      ]);
+      setSessions(sessionsData);
+      setTasks(tasksData.filter(t => t.status !== 'DONE')); // Only show active tasks
+      
+      // Calculate basic stats
+      if (sessionsData.length > 0) {
+        const total = sessionsData.reduce((acc, s) => acc + (s.duration_minutes || 0), 0);
+        const longest = Math.max(...sessionsData.map(s => s.duration_minutes || 0));
+        const avg = total / sessionsData.length; // Simplified avg
         
-        // Calculate basic stats
-        if (data.length > 0) {
-          const total = data.reduce((acc, s) => acc + (s.duration_minutes || 0), 0);
-          const longest = Math.max(...data.map(s => s.duration_minutes || 0));
-          const avg = total / data.length; // Simplified avg
-          
-          setStats({
-            totalMinutes: total,
-            averagePerDay: Math.round(avg * 10) / 10,
-            longestSession: longest
-          });
-        }
-      } catch (err) {
-        console.error('Failed to fetch sessions:', err);
-      } finally {
-        setLoading(false);
+        setStats({
+          totalMinutes: total,
+          averagePerDay: Math.round(avg * 10) / 10,
+          longestSession: longest
+        });
       }
-    };
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchSessions();
   }, []);
 
-  if (loading) {
+  const handleCreateSession = async (e) => {
+    e.preventDefault();
+    if (!newSession.task_id) {
+      alert("Vui lòng chọn một công việc!");
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      const endTime = new Date();
+      const startTime = subMinutes(endTime, newSession.duration_minutes);
+      
+      await api.sessions.create({
+        task_id: parseInt(newSession.task_id),
+        duration_minutes: parseInt(newSession.duration_minutes),
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
+        notes: newSession.notes || undefined
+      });
+      
+      setIsModalOpen(false);
+      setNewSession({ task_id: '', duration_minutes: 25, notes: '' });
+      await fetchSessions();
+    } catch (err) {
+      alert(err.message || 'Không thể ghi lại phiên học');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loading && sessions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-96 gap-4">
         <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
@@ -60,11 +109,79 @@ export default function StudySessions() {
           <h1 className="text-3xl font-bold text-gray-900">Phiên học</h1>
           <p className="text-gray-600 mt-2">Theo dõi thời gian học và năng suất của bạn</p>
         </div>
-        <Button className="bg-indigo-600 hover:bg-indigo-700 gap-2">
+        <Button 
+          className="bg-indigo-600 hover:bg-indigo-700 gap-2"
+          onClick={() => setIsModalOpen(true)}
+        >
           <Plus className="w-4 h-4" />
           Ghi lại phiên học
         </Button>
       </div>
+
+      {/* Record Session Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={handleCreateSession}>
+            <DialogHeader>
+              <DialogTitle>Ghi lại phiên học</DialogTitle>
+              <DialogDescription>
+                Bạn vừa học xong? Hãy ghi lại thời gian để tích lũy điểm tiến độ nhé.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="task">Thuộc công việc nào?</Label>
+                <Select 
+                  value={newSession.task_id} 
+                  onValueChange={(val) => setNewSession({...newSession, task_id: val})}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="-- Chọn công việc --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tasks.length === 0 ? (
+                      <SelectItem value="none" disabled>Không có công việc nào đang diễn ra</SelectItem>
+                    ) : (
+                      tasks.map(task => (
+                        <SelectItem key={task.id} value={task.id.toString()}>
+                          {task.title}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid items-center gap-2">
+                <Label htmlFor="duration">Thời gian (phút)</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  min="1"
+                  max="240"
+                  value={newSession.duration_minutes}
+                  onChange={(e) => setNewSession({...newSession, duration_minutes: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="grid items-center gap-2">
+                <Label htmlFor="notes">Ghi chú thêm (không bắt buộc)</Label>
+                <Input
+                  id="notes"
+                  value={newSession.notes}
+                  onChange={(e) => setNewSession({...newSession, notes: e.target.value})}
+                  placeholder="Bạn đã học được gì?"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+              <Button type="submit" disabled={isSubmitting || !newSession.task_id} className="bg-indigo-600">
+                {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "Lưu phiên học"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Weekly Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
