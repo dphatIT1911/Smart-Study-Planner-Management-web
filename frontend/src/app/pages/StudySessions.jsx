@@ -34,18 +34,33 @@ export default function StudySessions() {
   const fetchSessions = async () => {
     try {
       setLoading(true);
-      const [sessionsData, tasksData] = await Promise.all([
+      const [sessionsData, tasksData, subjectsData] = await Promise.all([
         api.sessions.getAll(),
-        api.tasks.getAll()
+        api.tasks.getAll(),
+        api.subjects.getAll()
       ]);
-      setSessions(sessionsData);
-      setTasks(tasksData.filter(t => t.status !== 'DONE')); // Only show active tasks
+      
+      const mappedTasks = tasksData.map(task => ({
+         ...task,
+         subject: subjectsData.find(s => s.id?.toString() === task.subject_id?.toString())
+      }));
+      
+      const mappedSessions = sessionsData.map(session => ({
+         ...session,
+         task: mappedTasks.find(t => t.id?.toString() === session.task_id?.toString())
+      }));
+      
+      // Sort sessions by end_time descending (newest first)
+      mappedSessions.sort((a, b) => new Date(b.end_time || b.start_time) - new Date(a.end_time || a.start_time));
+      
+      setSessions(mappedSessions);
+      setTasks(mappedTasks.filter(t => t.status !== 'DONE')); // Only show active tasks
       
       // Calculate basic stats
-      if (sessionsData.length > 0) {
-        const total = sessionsData.reduce((acc, s) => acc + (s.duration_minutes || 0), 0);
-        const longest = Math.max(...sessionsData.map(s => s.duration_minutes || 0));
-        const avg = total / sessionsData.length; // Simplified avg
+      if (mappedSessions.length > 0) {
+        const total = mappedSessions.reduce((acc, s) => acc + (s.duration_minutes || 0), 0);
+        const longest = Math.max(...mappedSessions.map(s => s.duration_minutes || 0));
+        const avg = total / mappedSessions.length; // Simplified avg
         
         setStats({
           totalMinutes: total,
@@ -112,79 +127,8 @@ export default function StudySessions() {
           <h1 className="text-3xl font-bold text-gray-900">Phiên học</h1>
           <p className="text-gray-600 mt-2">Theo dõi thời gian học và năng suất của bạn</p>
         </div>
-        <Button 
-          className="bg-indigo-600 hover:bg-indigo-700 gap-2"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <Plus className="w-4 h-4" />
-          Ghi lại phiên học
-        </Button>
       </div>
-
-      {/* Record Session Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <form onSubmit={handleCreateSession}>
-            <DialogHeader>
-              <DialogTitle>Ghi lại phiên học</DialogTitle>
-              <DialogDescription>
-                Bạn vừa học xong? Hãy ghi lại thời gian để tích lũy điểm tiến độ nhé.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="task">Thuộc công việc nào?</Label>
-                <Select 
-                  value={newSession.task_id} 
-                  onValueChange={(val) => setNewSession({...newSession, task_id: val})}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="-- Chọn công việc --" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tasks.length === 0 ? (
-                      <SelectItem value="none" disabled>Không có công việc nào đang diễn ra</SelectItem>
-                    ) : (
-                      tasks.map(task => (
-                        <SelectItem key={task.id} value={task.id.toString()}>
-                          {task.title}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid items-center gap-2">
-                <Label htmlFor="duration">Thời gian (phút)</Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  min="1"
-                  max="240"
-                  value={newSession.duration_minutes}
-                  onChange={(e) => setNewSession({...newSession, duration_minutes: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="grid items-center gap-2">
-                <Label htmlFor="notes">Ghi chú thêm (không bắt buộc)</Label>
-                <Input
-                  id="notes"
-                  value={newSession.notes}
-                  onChange={(e) => setNewSession({...newSession, notes: e.target.value})}
-                  placeholder="Bạn đã học được gì?"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
-              <Button type="submit" disabled={isSubmitting || !newSession.task_id} className="bg-indigo-600">
-                {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "Lưu phiên học"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Modal logic removed */}
 
       {/* Weekly Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

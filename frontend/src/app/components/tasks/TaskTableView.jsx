@@ -1,21 +1,33 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { CheckCircle2, Clock, Calendar } from 'lucide-react';
+import { CheckCircle2, Clock, Calendar, Play } from 'lucide-react';
+
+const priorityLabels = {
+  'LOW': 'Thấp',
+  'MED': 'Trung bình',
+  'HIGH': 'Cao'
+};
+
+const statusLabels = {
+  'TODO': 'Cần làm',
+  'IN_PROGRESS': 'Đang làm',
+  'DONE': 'Hoàn thành'
+};
 
 const priorityColors = {
-  'Thấp': 'bg-green-100 text-green-700 border-green-200',
-  'Trung bình': 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  'Cao': 'bg-red-100 text-red-700 border-red-200'
+  'LOW': 'bg-green-100 text-green-700 border-green-200',
+  'MED': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  'HIGH': 'bg-red-100 text-red-700 border-red-200'
 };
 
 const statusColors = {
-  'Cần làm': 'bg-gray-100 text-gray-700 border-gray-200',
-  'Đang làm': 'bg-blue-100 text-blue-700 border-blue-200',
-  'Hoàn thành': 'bg-green-100 text-green-700 border-green-200'
+  'TODO': 'bg-gray-100 text-gray-700 border-gray-200',
+  'IN_PROGRESS': 'bg-blue-100 text-blue-700 border-blue-200',
+  'DONE': 'bg-green-100 text-green-700 border-green-200'
 };
 
-export default function TaskTableView({ tasks, onTaskClick }) {
+export default function TaskTableView({ tasks, onTaskClick, onStartTimer }) {
   if (tasks.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-dashed border-slate-200">
@@ -46,32 +58,41 @@ export default function TaskTableView({ tasks, onTaskClick }) {
             >
               <TableCell className="font-medium text-slate-900">
                 <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: task.subjectColor }} />
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: task.subject?.color || '#cbd5e1' }} />
                   {task.title}
                 </div>
               </TableCell>
               <TableCell>
                 <span className="text-sm font-medium text-slate-600 px-2.5 py-1 rounded-md bg-slate-100 ring-1 ring-inset ring-slate-200/50">
-                  {task.subject}
+                  {task.subject?.name || 'Không có'}
                 </span>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-1.5 text-sm text-slate-500">
                   <Calendar className="w-3.5 h-3.5" />
-                  {task.dueDate}
+                  {task.due_date ? new Date(task.due_date).toLocaleDateString('vi-VN') : 'Không có'}
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className={`${priorityColors[task.priority]} whitespace-nowrap px-2 py-0.5 font-medium`}>
-                  {task.priority}
+                <Badge variant="outline" className={`${priorityColors[task.priority] || priorityColors['MED']} whitespace-nowrap px-2 py-0.5 font-medium`}>
+                  {priorityLabels[task.priority] || task.priority}
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className={`${statusColors[task.status]} whitespace-nowrap px-2 py-0.5 font-medium`}>
-                  {task.status}
+                <Badge variant="outline" className={`${statusColors[task.status] || statusColors['TODO']} whitespace-nowrap px-2 py-0.5 font-medium`}>
+                  {statusLabels[task.status] || task.status}
                 </Badge>
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right whitespace-nowrap">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="opacity-0 group-hover:opacity-100 transition-opacity gap-1.5 mr-2 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 font-semibold"
+                  onClick={(e) => onStartTimer && onStartTimer(task, e)}
+                >
+                  <Play className="w-4 h-4" />
+                  Pomodoro
+                </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 

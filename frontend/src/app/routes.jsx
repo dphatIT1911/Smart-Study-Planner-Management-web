@@ -7,6 +7,7 @@ import MySubjects from "./pages/MySubjects";
 import TaskListPage from "./pages/TaskListPage";
 import StudySessions from "./pages/StudySessions";
 import Settings from "./pages/Settings";
+import FocusSpace from "./pages/FocusSpace";
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { path: "subjects", Component: MySubjects },
       { path: "tasks", Component: TaskListPage },
       { path: "sessions", Component: StudySessions },
+      { path: "focus", Component: FocusSpace },
       { path: "settings", Component: Settings }]
 
   }]

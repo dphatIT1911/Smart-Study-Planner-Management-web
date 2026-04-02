@@ -7,6 +7,7 @@ import TaskTableView from '../components/tasks/TaskTableView';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
 import { api } from '../api';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router';
 
 export default function TaskListPage() {
   const [tasks, setTasks] = useState([]);
@@ -18,6 +19,7 @@ export default function TaskListPage() {
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,11 +50,19 @@ export default function TaskListPage() {
       }
     }
     return true;
-  });
+  }).map(task => ({
+    ...task,
+    subject: task.subject_id ? subjects.find(s => s.id?.toString() === task.subject_id?.toString()) : null
+  }));
 
   const handleTaskClick = (task) => {
     setSelectedTask(task);
     setIsModalOpen(true);
+  };
+
+  const handleStartTimer = (task, e) => {
+    e.stopPropagation(); // prevent modal opening
+    navigate(`/focus?taskId=${task.id}`);
   };
 
   const handleSaveTask = async (taskData) => {
@@ -150,9 +160,9 @@ export default function TaskListPage() {
 
       <div className="flex-1 overflow-hidden min-h-0">
         {viewMode === 'board' ? (
-          <TaskBoardView tasks={filteredTasks} onTaskClick={handleTaskClick} />
+          <TaskBoardView tasks={filteredTasks} onTaskClick={handleTaskClick} onStartTimer={handleStartTimer} />
         ) : (
-          <TaskTableView tasks={filteredTasks} onTaskClick={handleTaskClick} />
+          <TaskTableView tasks={filteredTasks} onTaskClick={handleTaskClick} onStartTimer={handleStartTimer} />
         )}
       </div>
 

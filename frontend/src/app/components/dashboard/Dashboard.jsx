@@ -55,7 +55,13 @@ export default function Dashboard() {
         });
 
         setSubjects(Array.isArray(allSubjects) ? allSubjects.slice(0, 4) : []);
-        setTasks(Array.isArray(allTasks) ? allTasks.slice(0, 5) : []);
+
+        const mappedTasks = Array.isArray(allTasks) ? allTasks.map(task => ({
+          ...task,
+          subject: task.subject_id ? allSubjects.find(s => s.id?.toString() === task.subject_id?.toString()) : null
+        })) : [];
+
+        setTasks(mappedTasks.slice(0, 5));
         setRecentSession(Array.isArray(allSessions) ? allSessions[0] || null : null);
         
       } catch (err) {
