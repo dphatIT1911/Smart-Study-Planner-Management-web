@@ -1,6 +1,6 @@
 // BASE should be the backend API URL. In production, we get it from environment.
 // In development, we use '/api' to trigger Vite's proxy.
-const BASE = import.meta.env.VITE_API_URL || '/api'; 
+const BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, ''); 
 
 export const api = {
   // Helper to handle response and catch non-JSON errors (like 500)

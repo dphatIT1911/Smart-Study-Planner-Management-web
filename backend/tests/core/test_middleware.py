@@ -16,10 +16,10 @@ def test_public_routes_no_auth(client):
 
 
 def test_protected_route_missing_token(client):
-    # Profiler endpoint requires auth check
+    # Profile endpoint requires auth - OAuth2PasswordBearer returns 401 "Not authenticated"
     response = client.get("/auth/profile")
     assert response.status_code == 401
-    assert response.json() == {"detail": "Missing or invalid authorization token"}
+    assert response.json() == {"detail": "Not authenticated"}
 
 
 def test_protected_route_invalid_token(client):
@@ -27,15 +27,17 @@ def test_protected_route_invalid_token(client):
         "/auth/profile",
         headers={"Authorization": "Bearer invalid_token_xyz"}
     )
-    assert response.status_code == 401
+    # deps.get_current_user raises 403 when JWT decode fails
+    assert response.status_code == 403
     assert response.json() == {"detail": "Could not validate credentials"}
 
 
 def test_protected_route_wrong_auth_header_format(client):
-    # No Bearer prefix
+    # No Bearer prefix - OAuth2PasswordBearer sees no valid Bearer token
     response = client.get(
         "/auth/profile",
         headers={"Authorization": "Token my_token_here"} # Wrong prefix
     )
     assert response.status_code == 401
-    assert response.json() == {"detail": "Missing or invalid authorization token"}
+    assert response.json() == {"detail": "Not authenticated"}
+

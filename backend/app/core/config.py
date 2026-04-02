@@ -1,5 +1,6 @@
+from typing import Union
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, model_validator
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Study Planner App"
@@ -19,8 +20,16 @@ class Settings(BaseSettings):
     EMAILS_FROM_EMAIL: str = Field("info@smartstudy.com", description="From email address")
     EMAILS_FROM_NAME: str = Field("Smart Study Planner", description="From email name")
 
-    # CORS Settings
-    BACKEND_CORS_ORIGINS: list[str] = ["*"]
+    # CORS Settings - accepts comma-separated string or JSON array from env var
+    BACKEND_CORS_ORIGINS: Union[str, list[str]] = "*"
+    
+    @model_validator(mode="after")
+    def parse_cors_origins(self):
+        """Ensure BACKEND_CORS_ORIGINS is always a list."""
+        origins = self.BACKEND_CORS_ORIGINS
+        if isinstance(origins, str):
+            self.BACKEND_CORS_ORIGINS = [o.strip() for o in origins.split(",") if o.strip()]
+        return self
 
     # This will load the variables from .env if present
     model_config = SettingsConfigDict(

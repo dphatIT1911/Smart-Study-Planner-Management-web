@@ -20,17 +20,7 @@ def create_app() -> FastAPI:
         version="1.0.0",
     )
     
-    # CORS Middleware
-    from fastapi.middleware.cors import CORSMiddleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-        allow_credentials=True,
-    )
-    
-    # Middleware
+    # Middleware imports
     from fastapi.middleware.cors import CORSMiddleware
     from app.core.middleware import AuthMiddleware
 
@@ -38,19 +28,27 @@ def create_app() -> FastAPI:
     app.add_middleware(AuthMiddleware)
 
     # CORSMiddleware is added second (outer) to wrap AuthMiddleware and handle CORS first
-    # Note: If allow_origins=["*"], allow_credentials must be False.
+    # Build the origins list from settings
     cors_origins = [str(origin).rstrip("/") for origin in settings.BACKEND_CORS_ORIGINS]
-    allow_credentials = True
+    
+    # If wildcard "*" is used, allow all origins WITHOUT credentials (per CORS spec)
     if "*" in cors_origins:
-        allow_credentials = False
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=cors_origins,
-        allow_credentials=allow_credentials,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=False,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    else:
+        # Specific origins → allow credentials (cookies, Authorization header)
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=cors_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     # Include all API routers
     app.include_router(api_router, prefix="")

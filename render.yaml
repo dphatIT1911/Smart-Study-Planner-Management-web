@@ -21,6 +21,8 @@ services:
         value: "10080"
       - key: PORT
         value: "8000"
+      - key: BACKEND_CORS_ORIGINS
+        value: "*"
 
   # ---------------------------------------------
   # 2. FRONTEND SERVICE (Vite Static Site)
@@ -33,9 +35,14 @@ services:
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_API_URL
         fromService:
           type: web
           name: smart-study-backend
           envVarKey: RENDER_EXTERNAL_URL
+
