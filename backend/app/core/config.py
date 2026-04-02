@@ -24,11 +24,26 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: Union[str, list[str]] = "*"
     
     @model_validator(mode="after")
-    def parse_cors_origins(self):
-        """Ensure BACKEND_CORS_ORIGINS is always a list."""
+    def validate_and_fix_settings(self):
+        """Ensure all settings are properly formatted for application use."""
+        # 1. Fix DATABASE_URL for SQLAlchemy 1.4+ compatibility (postgres:// -> postgresql://)
+        # And ensure sslmode=require is used for Render DBs
+        db_url = self.DATABASE_URL
+        if db_url and db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
+        # Add sslmode=require if connecting to Render (dpg-...) and not specified
+        if db_url and "render.com" in db_url and "sslmode" not in db_url:
+            separator = "&" if "?" in db_url else "?"
+            db_url = f"{db_url}{separator}sslmode=require"
+            
+        self.DATABASE_URL = db_url
+
+        # 2. Ensure BACKEND_CORS_ORIGINS is always a list
         origins = self.BACKEND_CORS_ORIGINS
         if isinstance(origins, str):
             self.BACKEND_CORS_ORIGINS = [o.strip() for o in origins.split(",") if o.strip()]
+            
         return self
 
     # This will load the variables from .env if present

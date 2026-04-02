@@ -36,7 +36,14 @@ export default function LoginPage() {
       
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      console.error('Login error:', err);
+      if (err.message.includes('Failed to fetch')) {
+        setError('Không thể kết nối đến máy chủ API. Vui lòng kiểm tra xem Backend trên Render đã hoạt động chưa (có thể đang khởi động nguội).');
+      } else if (err.message.includes('404')) {
+        setError('Không tìm thấy API (404). Vui lòng kiểm tra cấu hình VITE_API_URL trên Render.');
+      } else {
+        setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      }
     } finally {
       setLoading(false);
     }
