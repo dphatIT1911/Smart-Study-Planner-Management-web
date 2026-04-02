@@ -27,28 +27,20 @@ def create_app() -> FastAPI:
     # AuthMiddleware is added first (inner)
     app.add_middleware(AuthMiddleware)
 
-    # CORSMiddleware is added second (outer) to wrap AuthMiddleware and handle CORS first
-    # Build the origins list from settings
-    cors_origins = [str(origin).rstrip("/") for origin in settings.BACKEND_CORS_ORIGINS]
+    # CORSMiddleware is added last to wrap all inner middlewares (Auth, etc.)
+    # Build specific origins
+    origins = [str(o).rstrip("/") for o in settings.BACKEND_CORS_ORIGINS]
     
-    # If wildcard "*" is used, allow all origins WITHOUT credentials (per CORS spec)
-    if "*" in cors_origins:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=False,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-    else:
-        # Specific origins → allow credentials (cookies, Authorization header)
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=cors_origins,
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
+    # Use a more robust CORS configuration
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins if "*" not in origins else ["*"],
+        allow_origin_regex=r"https?://.*\.onrender\.com" if "*" in origins else None,
+        allow_credentials=True if "*" not in origins else False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
 
     # Include all API routers
     app.include_router(api_router, prefix="")
