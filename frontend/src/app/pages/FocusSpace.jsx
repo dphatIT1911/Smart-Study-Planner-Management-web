@@ -20,6 +20,7 @@ export default function FocusSpace() {
   const [timerMode, setTimerMode] = useState('FOCUS'); // 'FOCUS' or 'BREAK'
   const [pomodoroActive, setPomodoroActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0); // Track ACTUAL study time
   
   // State for total study time for this task
   const [pastSessionsMinutes, setPastSessionsMinutes] = useState(0);
@@ -28,10 +29,12 @@ export default function FocusSpace() {
   // Use refs
   const timeLeftRef = useRef(timeLeft);
   const selectedTaskIdRef = useRef(selectedTaskId);
+  const elapsedSecondsRef = useRef(elapsedSeconds);
 
   // Sync refs
   useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
   useEffect(() => { selectedTaskIdRef.current = selectedTaskId; }, [selectedTaskId]);
+  useEffect(() => { elapsedSecondsRef.current = elapsedSeconds; }, [elapsedSeconds]);
 
   useEffect(() => {
     Promise.all([
@@ -67,25 +70,26 @@ export default function FocusSpace() {
   const minutesRemainingToTarget = targetTotalMinutes > 0 ? Math.max(0, targetTotalMinutes - pastSessionsMinutes) : 0;
   const isNearTarget = targetTotalMinutes > 0 && minutesRemainingToTarget > 0 && minutesRemainingToTarget <= 10;
 
-  const savePartialSession = async (finalTimeLeft, mode) => {
-    if (mode === 'FOCUS' && sessionStartTime && selectedTaskIdRef.current && selectedTaskIdRef.current !== 'none') {
-      const durationSeconds = (pomodoroTarget * 60) - finalTimeLeft;
-      const durationMin = Math.ceil(durationSeconds / 60);
+  const savePartialSession = async (currentElapsedSeconds, mode) => {
+    if (mode === 'FOCUS' && selectedTaskIdRef.current && selectedTaskIdRef.current !== 'none' && currentElapsedSeconds > 0) {
+      const durationMin = Math.ceil(currentElapsedSeconds / 60);
       
-      if (durationSeconds > 0) { // Save even if it's very short for testing/accuracy
-        try {
-           const endTime = new Date().toISOString();
-           await api.sessions.create({
-             task_id: parseInt(selectedTaskIdRef.current),
-             start_time: sessionStartTime,
-             end_time: endTime,
-             duration_minutes: durationMin
-           });
-           setPastSessionsMinutes(prev => prev + durationMin);
-           toast.success('Đã tự động lưu', { description: `Ghi nhận +${durationMin} phút vào hệ thống.`});
-        } catch (err) {
-           console.error("Lỗi lưu session", err);
-        }
+      try {
+         const endTime = new Date().toISOString();
+         // If we don't have sessionStartTime, we estimate it from duration
+         const startTime = sessionStartTime || new Date(Date.now() - currentElapsedSeconds * 1000).toISOString();
+         
+         await api.sessions.create({
+           task_id: parseInt(selectedTaskIdRef.current),
+           start_time: startTime,
+           end_time: endTime,
+           duration_minutes: durationMin
+         });
+         setPastSessionsMinutes(prev => prev + durationMin);
+         setElapsedSeconds(0); // Reset for next incremental save
+         toast.success('Đã ghi nhận thời gian', { description: `Lưu thành công +${durationMin} phút vào lịch sử.`});
+      } catch (err) {
+         console.error("Lỗi lưu session", err);
       }
     }
     setSessionStartTime(null);
@@ -95,7 +99,7 @@ export default function FocusSpace() {
     setPomodoroActive(false);
     
     if (mode === 'FOCUS') {
-      await savePartialSession(0, 'FOCUS');
+      await savePartialSession(elapsedSecondsRef.current, 'FOCUS');
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       toast.success('Xuất sắc! Hết giờ tập trung rùi', { description: 'Luân chuyển sang giờ nghỉ ngơi 5 phút nhé.' });
       setTimerMode('BREAK');
@@ -135,11 +139,11 @@ export default function FocusSpace() {
   useEffect(() => {
     const handleFullscreenChange = async () => {
       if (!document.fullscreenElement && isZenMode) {
-        if (pomodoroActive) {
-           await savePartialSession(timeLeftRef.current, timerMode);
-        }
-        setIsZenMode(false);
-        setPomodoroActive(false);
+      if (pomodoroActive) {
+         await savePartialSession(elapsedSecondsRef.current, timerMode);
+      }
+      setIsZenMode(false);
+      setPomodoroActive(false);
       }
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -155,6 +159,9 @@ export default function FocusSpace() {
              toast.info('Chuẩn bị nhé!', { description: 'Còn 1 phút nữa là hết giờ nghỉ ngơi rồi.' });
            }
            setTimeLeft(prev => prev - 1);
+           if (timerMode === 'FOCUS') {
+              setElapsedSeconds(prev => prev + 1);
+           }
         } else {
           clearInterval(interval);
           handleTimerComplete(timerMode);
@@ -167,7 +174,7 @@ export default function FocusSpace() {
   const toggleTimer = async () => {
     if (pomodoroActive) {
       // Pausing -> Save partial 
-      await savePartialSession(timeLeft, timerMode);
+      await savePartialSession(elapsedSeconds, timerMode);
       setPomodoroActive(false);
     } else {
       // Starting
@@ -178,6 +185,7 @@ export default function FocusSpace() {
 
   const resetTimer = () => {
     setPomodoroActive(false);
+    setElapsedSeconds(0);
     setTimeLeft(timerMode === 'FOCUS' ? pomodoroTarget * 60 : 5 * 60);
   };
 
@@ -287,6 +295,20 @@ export default function FocusSpace() {
               {pomodoroActive ? <Pause className="w-6 h-6 mr-3" /> : <Play className="w-6 h-6 mr-3" />}
               {pomodoroActive ? "Tạm dừng" : "Bắt đầu cày"}
             </Button>
+            
+            {!pomodoroActive && elapsedSeconds > 10 && (
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="h-16 px-8 rounded-full hover:bg-rose-900/50 hover:text-rose-100 border-rose-900/30 bg-rose-950/20 text-rose-400 border-2 transition-all hover:scale-105 font-bold"
+                onClick={() => {
+                   savePartialSession(elapsedSeconds, 'FOCUS');
+                   exitZenMode();
+                }}
+              >
+                Kết thúc & Lưu
+              </Button>
+            )}
             
             {!pomodoroActive && timeLeft < currentMaxTime && (
               <Button 
