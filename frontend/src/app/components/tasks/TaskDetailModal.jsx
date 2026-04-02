@@ -9,6 +9,7 @@ import { Calendar, Clock, CheckSquare, Plus, Check, Play, Pause, Save, X, Lightb
 import { Checkbox } from '../ui/checkbox';
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
+import { api } from '../../api';
 
 const priorityOptions = [
   { value: 'LOW', label: 'Thấp' },
@@ -24,9 +25,6 @@ const statusOptions = [
 
 export default function TaskDetailModal({ task, subjects = [], isOpen, onOpenChange, onSave }) {
   const [editedTask, setEditedTask] = useState({});
-  const [pomodoroTarget, setPomodoroTarget] = useState(25);
-  const [pomodoroActive, setPomodoroActive] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [subtasks, setSubtasks] = useState([]);
 
   useEffect(() => {
@@ -37,8 +35,6 @@ export default function TaskDetailModal({ task, subjects = [], isOpen, onOpenCha
           subject_id: task.subject_id?.toString() || 'none'
         });
         setSubtasks(task.subtasks || []);
-        setPomodoroActive(false);
-        setTimeLeft(pomodoroTarget * 60);
       } else {
         setEditedTask({
           title: '',
@@ -51,33 +47,8 @@ export default function TaskDetailModal({ task, subjects = [], isOpen, onOpenCha
         setSubtasks([]);
       }
     }
-  }, [task, isOpen, pomodoroTarget]);
+  }, [task, isOpen]);
 
-  useEffect(() => {
-    let interval = null;
-    if (pomodoroActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((time) => time - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      setPomodoroActive(false);
-      // Play a tiny confetti when pomodoro ends
-      if (pomodoroActive) {
-         confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
-         toast.success('Hết giờ rùi!', { description: 'Nghỉ giải lao xíu nha.' });
-      }
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [pomodoroActive, timeLeft]);
-
-  const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
 
   const handleSave = () => {
     if (!editedTask.title?.trim()) {
@@ -110,14 +81,14 @@ export default function TaskDetailModal({ task, subjects = [], isOpen, onOpenCha
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] h-[90vh] overflow-y-auto">
-        <DialogHeader>
+        <DialogHeader className="pr-10 pt-2">
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-            <CheckSquare className="w-5 h-5 text-indigo-600" />
+            <CheckSquare className="w-6 h-6 shrink-0 text-indigo-600" />
             <Input
               value={editedTask.title || ''}
               onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
               placeholder="Tên công việc mới..."
-              className="text-2xl font-bold border-none shadow-none focus-visible:ring-1 focus-visible:ring-indigo-200 px-0 rounded-none w-full"
+              className="text-2xl font-bold border-none shadow-none focus-visible:ring-1 focus-visible:ring-indigo-200 px-2 rounded-md w-full bg-transparent hover:bg-slate-50 transition-colors"
             />
           </DialogTitle>
         </DialogHeader>
@@ -189,28 +160,6 @@ export default function TaskDetailModal({ task, subjects = [], isOpen, onOpenCha
               </div>
             </div>
 
-            {/* Pomodoro Timer Placeholder */}
-            {task && (
-            <div className="bg-indigo-50 rounded-xl p-6 border border-indigo-100 flex flex-col items-center justify-center text-center">
-              <h3 className="text-lg font-bold text-indigo-900 mb-2">Đồng hồ Pomodoro</h3>
-              <div className="text-4xl font-mono font-bold text-indigo-600 my-4">
-                {formatTime(timeLeft)}
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  onClick={() => setPomodoroActive(!pomodoroActive)}
-                  className={pomodoroActive ? "bg-amber-500 hover:bg-amber-600 gap-2" : "bg-indigo-600 hover:bg-indigo-700 gap-2"}
-                >
-                  {pomodoroActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  {pomodoroActive ? "Tạm dừng" : "Bắt đầu"}
-                </Button>
-                <Button variant="outline" className="gap-2">
-                  <Clock className="w-4 h-4" />
-                  Cài đặt ({pomodoroTarget}p)
-                </Button>
-              </div>
-            </div>
-            )}
           </div>
 
           <div className="space-y-6">
