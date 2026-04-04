@@ -33,6 +33,7 @@ class EmailService:
             subject=subject,
             recipients=[email_to],
             body=body,
+            template_body=template_body,
             subtype=MessageType.html if template_name else MessageType.plain
         )
         
@@ -40,5 +41,30 @@ class EmailService:
             await self.fm.send_message(message, template_name=template_name)
         else:
             await self.fm.send_message(message)
+
+    async def send_deadline_reminder(
+        self, 
+        email_to: str, 
+        name: str, 
+        task_title: str, 
+        due_date: str, 
+        subject_name: str = "General",
+        description: str = "",
+        app_url: str = "https://smart-study-planner.web.app"
+    ):
+        await self.send_email(
+            email_to=email_to,
+            subject=f"🔔 Reminder: Task Deadline Approaching - {task_title}",
+            body="", # Body is not used when template_name is set
+            template_name="deadline_reminder.html",
+            template_body={
+                "name": name,
+                "task_title": task_title,
+                "due_date": due_date,
+                "subject_name": subject_name,
+                "description": description,
+                "app_url": app_url
+            }
+        )
 
 email_service = EmailService()

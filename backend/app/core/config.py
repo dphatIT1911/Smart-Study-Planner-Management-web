@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = Field("", description="SMTP Password")
     EMAILS_FROM_EMAIL: str = Field("info@smartstudy.com", description="From email address")
     EMAILS_FROM_NAME: str = Field("Smart Study Planner", description="From email name")
+    FRONTEND_URL: str = Field("http://localhost:5173", description="Frontend application URL")
 
     # CORS Settings - accepts comma-separated string or JSON array from env var
     BACKEND_CORS_ORIGINS: Union[str, list[str]] = "*"

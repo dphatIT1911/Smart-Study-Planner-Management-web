@@ -32,6 +32,7 @@ class Task(Base):
     due_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
     estimated_minutes: Mapped[int] = mapped_column(Integer, default=0)
     actual_minutes: Mapped[int] = mapped_column(Integer, default=0)
+    reminder_sent: Mapped[bool] = mapped_column(default=False)
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="tasks")

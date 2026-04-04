@@ -45,6 +45,29 @@ def create_app() -> FastAPI:
     # Include all API routers
     app.include_router(api_router, prefix="")
 
+    @app.on_event("startup")
+    async def start_notification_scheduler():
+        import asyncio
+        from app.services.notification import notification_service
+        from app.db.session import SessionLocal
+        
+        async def scheduled_deadline_check():
+            while True:
+                db = SessionLocal()
+                try:
+                    await notification_service.check_and_send_deadline_reminders(db)
+                except Exception as e:
+                    import logging
+                    logging.error(f"Error in scheduled deadline check: {str(e)}")
+                finally:
+                    db.close()
+                
+                # Check every 1 minute (60 seconds)
+                await asyncio.sleep(60)
+        
+        # Run in background
+        asyncio.create_task(scheduled_deadline_check())
+
     return app
 
 app = create_app()
