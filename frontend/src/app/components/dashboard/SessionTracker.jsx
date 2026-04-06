@@ -50,7 +50,7 @@ export default function SessionTracker({ recentSession }) {
               <h4 className="font-medium text-gray-900">{recentSession.subject}</h4>
               <div className="flex items-center gap-2 text-sm text-gray-500 mt-0.5">
                 <Calendar className="w-3.5 h-3.5" />
-                <span>{recentSession.date}</span>
+                <span>{recentSession.localDate || recentSession.date || 'Gần đây'}</span>
               </div>
             </div>
             <div className="text-right">

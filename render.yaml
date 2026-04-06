@@ -40,9 +40,9 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      # IMPORTANT: After first deploy, set VITE_API_URL manually in Render Dashboard
+      # to the backend's External URL (e.g. https://smart-study-backend.onrender.com)
+      # Docker services do NOT expose RENDER_EXTERNAL_URL automatically.
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: smart-study-backend
-          envVarKey: RENDER_EXTERNAL_URL
+        sync: false
 

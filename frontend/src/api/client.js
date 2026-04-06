@@ -9,6 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 export async function fetchFromApi(endpoint, options = {}) {
   // Tự động gép link gốc với link con
   const url = `${API_BASE_URL}${endpoint}`;
+  const method = options.method || 'GET';
   
   // Mặc định luôn gắn header JSON
   const headers = {

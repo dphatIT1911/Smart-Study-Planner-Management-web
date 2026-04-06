@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
 import { Button } from '../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Play, Pause, RotateCcw, Target, CheckCircle2, ArrowLeft, Maximize, Minimize, Clock, Coffee, AlertTriangle } from 'lucide-react';
+import { Play, Pause, RotateCcw, Target, CheckCircle2, ArrowLeft, Maximize, Minimize, Clock, Coffee, AlertTriangle, Music, Volume2, VolumeX, Wind, CloudRain, Sparkles } from 'lucide-react';
+ import { Switch } from '../components/ui/switch'; // Music toggle component
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
 import { api } from '../api';
@@ -22,6 +23,35 @@ export default function FocusSpace() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [elapsedSeconds, setElapsedSeconds] = useState(0); // Track ACTUAL study time
   
+  // Music Settings
+  const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
+    return localStorage.getItem('study_music_enabled') === 'true';
+  });
+  const [selectedTrack, setSelectedTrack] = useState(() => {
+    return localStorage.getItem('study_music_track') || 'lofi';
+  });
+  const [volume, setVolume] = useState(0.5);
+  const audioRef = useRef(null);
+
+  // Music Tracks Data (YouTube IDs)
+  const musicTracks = {
+    lofi: { 
+      name: 'Lofi Chill', 
+      url: 'jfKfPfyJRdk', // Lofi Girl Radio
+      icon: 'Coffee' 
+    },
+    rain: { 
+      name: 'Tiếng Mưa', 
+      url: 'mPZkdNFkNps', // Rain for 10 hours
+      icon: 'CloudRain' 
+    },
+    nature: { 
+      name: 'Thiên Nhiên', 
+      url: '6uv69vwyB_M', // Forest sounds
+      icon: 'Wind' 
+    }
+  };
+
   // State for total study time for this task
   const [pastSessionsMinutes, setPastSessionsMinutes] = useState(0);
   const [sessionStartTime, setSessionStartTime] = useState(null);
@@ -35,6 +65,54 @@ export default function FocusSpace() {
   useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
   useEffect(() => { selectedTaskIdRef.current = selectedTaskId; }, [selectedTaskId]);
   useEffect(() => { elapsedSecondsRef.current = elapsedSeconds; }, [elapsedSeconds]);
+
+  // YouTube Player Ref for direct control
+  const iframeRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Audio Control Logic (YouTube Version)
+  useEffect(() => {
+    const sendCommand = (func, args = []) => {
+      if (iframeRef.current && iframeRef.current.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func, args }),
+          '*'
+        );
+      }
+    };
+
+    const shouldPlay = isMusicEnabled && pomodoroActive && timerMode === 'FOCUS';
+    
+    // Small delay to ensure iframe is ready if the track just changed
+    const timer = setTimeout(() => {
+      if (shouldPlay) {
+        sendCommand('unMute');
+        sendCommand('setVolume', [volume * 100]);
+        sendCommand('playVideo');
+        setIsPlaying(true);
+      } else {
+        sendCommand('pauseVideo');
+        setIsPlaying(false);
+      }
+    }, 800); // Increased delay for stability
+
+    return () => clearTimeout(timer);
+  }, [isMusicEnabled, pomodoroActive, timerMode, selectedTrack, volume]);
+
+  // Preview Music Logic (YouTube Version)
+  const togglePreview = (trackId) => {
+    const isChanging = selectedTrack !== trackId;
+    
+    if (!isChanging && isPlaying && !pomodoroActive) {
+      // Toggle off if clicking the same track
+      setSelectedTrack(trackId);
+      setIsPlaying(false);
+    } else {
+      setSelectedTrack(trackId);
+      setIsPlaying(true);
+      // The useEffect will handle the rest
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -72,12 +150,20 @@ export default function FocusSpace() {
 
   const savePartialSession = async (currentElapsedSeconds, mode) => {
     if (mode === 'FOCUS' && selectedTaskIdRef.current && selectedTaskIdRef.current !== 'none' && currentElapsedSeconds > 0) {
-      const durationMin = Math.ceil(currentElapsedSeconds / 60);
+      const durationMin = Math.floor((currentElapsedSeconds + 10) / 60);
+      
+      if (durationMin <= 0) {
+        setElapsedSeconds(0);
+        setSessionStartTime(null);
+        toast.info('Học hơi "nén" nhỉ?', { description: 'Chưa đầy 50 giây nên chưa bõ công hệ thống ghi nhận. Cố thêm tí nữa nhé! 💪'});
+        return;
+      }
       
       try {
-         const endTime = new Date().toISOString();
-         // If we don't have sessionStartTime, we estimate it from duration
-         const startTime = sessionStartTime || new Date(Date.now() - currentElapsedSeconds * 1000).toISOString();
+         const now = new Date();
+         const endTime = now.toISOString();
+         // Ensure startTime is significantly before endTime
+         const startTime = sessionStartTime || new Date(now.getTime() - currentElapsedSeconds * 1000).toISOString();
          
          await api.sessions.create({
            task_id: parseInt(selectedTaskIdRef.current),
@@ -86,8 +172,8 @@ export default function FocusSpace() {
            duration_minutes: durationMin
          });
          setPastSessionsMinutes(prev => prev + durationMin);
-         setElapsedSeconds(0); // Reset for next incremental save
-         toast.success('Đã ghi nhận thời gian', { description: `Lưu thành công +${durationMin} phút vào lịch sử.`});
+         setElapsedSeconds(0); 
+         toast.success('Đỉnh chóp! 🚀', { description: `Đã nạp thành công +${durationMin} phút vào não bộ. Tiếp tục phát huy nào!`});
       } catch (err) {
          console.error("Lỗi lưu session", err);
       }
@@ -101,11 +187,11 @@ export default function FocusSpace() {
     if (mode === 'FOCUS') {
       await savePartialSession(elapsedSecondsRef.current, 'FOCUS');
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-      toast.success('Xuất sắc! Hết giờ tập trung rùi', { description: 'Luân chuyển sang giờ nghỉ ngơi 5 phút nhé.' });
+      toast.success('Hết giờ tập trung! 🎉', { description: 'Bộ não của bạn xứng đáng được nghỉ ngơi 5 phút. Đi uống nước đi nào!' });
       setTimerMode('BREAK');
       setTimeLeft(5 * 60);
     } else {
-      toast.info('Hết giờ nghỉ giải lao!', { description: 'Đã đến lúc quay lại cày tiếp!' });
+      toast.info('Hết giờ xả hơi! 🔥', { description: 'Pin đã sạc đầy, quay lại "pơ-phẹc" nốt công việc nào!' });
       setTimerMode('FOCUS');
       setTimeLeft(pomodoroTarget * 60);
     }
@@ -124,8 +210,8 @@ export default function FocusSpace() {
 
   const exitZenMode = async () => {
     // Save any ongoing session before exiting
-    if (pomodoroActive) {
-      await savePartialSession(timeLeftRef.current, timerMode);
+    if (pomodoroActive && timerMode === 'FOCUS') {
+      await savePartialSession(elapsedSeconds, timerMode);
     }
     setPomodoroActive(false);
     setIsZenMode(false);
@@ -139,7 +225,8 @@ export default function FocusSpace() {
   useEffect(() => {
     const handleFullscreenChange = async () => {
       if (!document.fullscreenElement && isZenMode) {
-      if (pomodoroActive) {
+      if (pomodoroActive && timerMode === 'FOCUS') {
+         // This is triggered by ESC - Use Ref for absolute latest value
          await savePartialSession(elapsedSecondsRef.current, timerMode);
       }
       setIsZenMode(false);
@@ -178,7 +265,9 @@ export default function FocusSpace() {
       setPomodoroActive(false);
     } else {
       // Starting
-      setSessionStartTime(new Date().toISOString());
+      if (!sessionStartTime) {
+        setSessionStartTime(new Date().toISOString());
+      }
       setPomodoroActive(true);
     }
   };
@@ -205,203 +294,158 @@ export default function FocusSpace() {
   const currentMaxTime = timerMode === 'FOCUS' ? (pomodoroTarget * 60) : (5 * 60);
   const progressPercent = 100 - (timeLeft / currentMaxTime) * 100;
 
-  if (isZenMode) {
-    const isBreak = timerMode === 'BREAK';
-    const bgClass = isBreak ? 'bg-sky-950' : 'bg-slate-950';
-    const ringClass = isBreak ? 'bg-sky-500' : 'bg-indigo-500';
-    const themeHoverClass = isBreak ? 'bg-sky-600 hover:bg-sky-500 hover:shadow-sky-900/50' : 'bg-indigo-600 hover:bg-indigo-500 hover:shadow-indigo-900/50';
-    const textTargetClass = isBreak ? 'text-sky-400' : 'text-indigo-400';
-    
-    return (
-      <div className={`fixed inset-0 z-[9999] ${bgClass} text-slate-100 flex flex-col items-center justify-center transition-colors duration-1000`}>
-        
-        <div className="absolute top-8 left-8">
-          <Button variant="ghost" className="text-slate-400 hover:text-slate-100 hover:bg-slate-800 gap-2 font-medium" onClick={exitZenMode}>
-            <Minimize className="w-5 h-5" />
-            Thoát Không Gian
-          </Button>
-        </div>
-
-        {targetTotalMinutes > 0 && selectedTaskId !== 'none' && (
-          <div className="absolute top-8 right-8 text-right">
-            <div className={`px-4 py-2 rounded-xl flex items-center gap-3 border ${
-               isNearTarget ? 'bg-rose-950/50 border-rose-500/50 text-rose-300' : 'bg-slate-900/50 border-slate-700 text-slate-300'
-            }`}>
-              <Clock className="w-5 h-5" />
-              <div className="flex flex-col items-end">
-                <span className="text-xs font-semibold tracking-wider uppercase opacity-70">Tiến độ mục tiêu</span>
-                <span className="font-bold">{pastSessionsMinutes} phút / {targetTotalMinutes} phút</span>
-              </div>
-            </div>
-            {isNearTarget && (
-               <p className="text-xs text-rose-400 font-medium mt-2 mr-2 flex items-center justify-end gap-1">
-                 <AlertTriangle className="w-3.5 h-3.5" />
-                 Sắp đạt mục tiêu (Chỉ còn &lt;= 10p)!
-               </p>
-            )}
-          </div>
-        )}
-
-        <div className="flex flex-col items-center w-full max-w-2xl px-6">
-          <div className="mb-12 text-center space-y-3">
-             <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/50 border border-slate-700 font-medium text-sm mb-2 shadow-sm transition-colors ${textTargetClass}`}>
-                {isBreak ? <Coffee className="w-4 h-4" /> : <Target className="w-4 h-4" />}
-                {isBreak ? 'MÀN NGHỈ NGƠI 5 PHÚT' : 'ĐANG TẬP TRUNG CAO ĐỘ'}
-             </div>
-             {selectedTask ? (
-               <>
-                 <h2 className="text-3xl font-black tracking-tight text-white">{selectedTask.title}</h2>
-                 <p className="text-slate-400 font-medium">Môn học: {selectedTask.subject?.name || 'Chưa phân loại'}</p>
-               </>
-             ) : (
-               <h2 className="text-3xl font-black tracking-tight text-white">Chế độ Học Tự Do</h2>
-             )}
-          </div>
-
-          <div className="relative mb-16 mt-4">
-            {pomodoroActive && (
-              <>
-                <div className={`absolute inset-0 ${ringClass}/20 rounded-full animate-ping opacity-20 scale-125 pointer-events-none`} style={{ animationDuration: '3s' }} />
-                <div className={`absolute inset-0 ${ringClass}/20 rounded-full animate-ping opacity-10 scale-150 pointer-events-none`} style={{ animationDuration: '4s' }} />
-              </>
-            )}
-            
-            <div className={`w-[22rem] h-[22rem] rounded-full flex items-center flex-col justify-center relative z-10 bg-slate-900 border-2 transition-all duration-700 shadow-2xl ${
-              pomodoroActive ? `border-${isBreak ? 'sky' : 'indigo'}-500/50 shadow-${isBreak ? 'sky' : 'indigo'}-900/50` : 'border-slate-800 shadow-xl'
-            }`}>
-              
-              <div className={`absolute bottom-0 left-0 right-0 ${ringClass}/30 rounded-b-full overflow-hidden`} style={{ height: '0%', transition: 'height 1s linear' }}>
-                 <div className={`w-full ${ringClass}/20 absolute bottom-0`} style={{ height: `${progressPercent}%`, transition: 'height 1s linear' }} />
-              </div>
-
-              <div className={`text-8xl font-mono tracking-tighter font-black z-20 transition-colors drop-shadow-md ${
-                pomodoroActive ? textTargetClass : 'text-slate-300'
-              }`}>
-                {formatTime(timeLeft)}
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-6 z-20 relative">
-            <Button
-              size="lg"
-              onClick={toggleTimer}
-              className={`h-16 rounded-full px-12 shadow-xl font-bold text-xl transition-all border-none ${
-                pomodoroActive 
-                  ? "bg-slate-800 hover:bg-slate-700 text-white hover:scale-105" 
-                  : `${themeHoverClass} hover:scale-105`
-              }`}
-            >
-              {pomodoroActive ? <Pause className="w-6 h-6 mr-3" /> : <Play className="w-6 h-6 mr-3" />}
-              {pomodoroActive ? "Tạm dừng" : "Bắt đầu cày"}
-            </Button>
-            
-            {!pomodoroActive && elapsedSeconds > 10 && (
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="h-16 px-8 rounded-full hover:bg-rose-900/50 hover:text-rose-100 border-rose-900/30 bg-rose-950/20 text-rose-400 border-2 transition-all hover:scale-105 font-bold"
-                onClick={() => {
-                   savePartialSession(elapsedSeconds, 'FOCUS');
-                   exitZenMode();
-                }}
-              >
-                Kết thúc & Lưu
-              </Button>
-            )}
-            
-            {!pomodoroActive && timeLeft < currentMaxTime && (
-              <Button 
-                variant="outline" 
-                size="icon"
-                className="h-16 w-16 rounded-full hover:bg-slate-800 hover:text-white border-slate-700 bg-slate-900 text-slate-400 border-2 transition-all hover:scale-105"
-                onClick={resetTimer}
-                title="Làm mới"
-              >
-                <RotateCcw className="w-6 h-6" />
-              </Button>
-            )}
-          </div>
-
-          <div className="mt-16 flex gap-3 relative z-20">
-             <span className="text-slate-500 font-medium flex items-center mr-2">Chu kỳ:</span>
-             {[15, 25, 45, 60, 90].map((t) => (
-               <button
-                 key={t}
-                 disabled={pomodoroActive || isBreak}
-                 onClick={() => handleTargetChange(t)}
-                 className={`px-4 py-2 font-bold rounded-xl transition-colors min-w-[60px] border ${
-                   pomodoroTarget === t && !isBreak
-                    ? 'bg-indigo-900/50 text-indigo-300 border-indigo-500/50 shadow-inner' 
-                    : 'bg-slate-900 text-slate-500 border-slate-800 hover:bg-slate-800 hover:text-slate-300 disabled:opacity-30 disabled:hover:bg-slate-900'
-                 }`}
-               >
-                 {t}p
-               </button>
-             ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Main Render Logic with Zen Mode wrapper
   return (
-    <div className="flex flex-col h-full bg-slate-50 min-h-[calc(100vh-theme(spacing.16))] relative">
-      <div className="p-8 max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center relative z-10">
-        <div className="mb-8">
-          <Button variant="ghost" className="text-slate-500 gap-2 hover:bg-slate-200" onClick={() => navigate(-1)}>
-            <ArrowLeft className="w-4 h-4" />
-            Trở lại danh sách
-          </Button>
-        </div>
-
-        <div className="bg-white p-10 rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center">
-          <div className="flex items-center gap-3 text-indigo-900 mb-2">
-            <Target className="w-8 h-8 text-indigo-600" />
-            <h1 className="text-3xl font-black uppercase tracking-tight">Khu vực tập trung</h1>
-          </div>
-          <p className="text-slate-500 mb-10 font-medium">Chuẩn bị trước khi bước vào không gian tĩnh lặng</p>
-          
-          <div className="w-full max-w-lg mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
-            <label className="text-sm font-bold text-slate-700 uppercase mb-3 block">Lựa chọn Nhiệm vụ</label>
-            <Select value={selectedTaskId} onValueChange={setSelectedTaskId}>
-              <SelectTrigger className="w-full h-14 bg-white border-slate-200 text-slate-800 font-medium text-lg shadow-sm">
-                <SelectValue placeholder="-- Không chọn công việc --" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">-- Học tự do (Không lưu lịch sử) --</SelectItem>
-                {tasks.map(t => (
-                  <SelectItem key={t.id} value={t.id.toString()}>{t.title}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {selectedTask ? (
-               <div className="mt-4 pt-4 border-t border-slate-200 flex justify-between">
-                 <div>
-                    <p className="text-sm text-slate-500">Môn học:</p>
-                    <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-medium inline-block mt-1">
-                      {selectedTask.subject?.name || 'Chưa phân loại'}
-                    </span>
-                 </div>
-                 {targetTotalMinutes > 0 && (
-                   <div className="text-right">
-                     <p className="text-sm text-slate-500">Mục tiêu tổng:</p>
-                     <span className="font-bold text-indigo-600">{targetTotalMinutes} phút</span>
-                   </div>
-                 )}
-               </div>
-            ) : null}
-          </div>
-
-          <div className="w-full max-w-lg flex flex-col items-center">
-            <Button size="lg" onClick={enterZenMode} className="w-full h-16 rounded-2xl shadow-lg shadow-indigo-200 font-bold text-xl transition-all bg-indigo-600 hover:bg-indigo-700 hover:scale-[1.02]">
-              <Maximize className="w-6 h-6 mr-3" />
-              Tiến Vào Không Gian Tập Trung
+    <div className="min-h-screen relative">
+      {isZenMode ? (
+        <div className={`fixed inset-0 z-[9999] ${timerMode === 'BREAK' ? 'bg-sky-950' : 'bg-slate-950'} text-slate-100 flex flex-col items-center justify-center transition-colors duration-1000`}>
+          <div className="absolute top-8 left-8">
+            <Button variant="ghost" className="text-slate-400 hover:text-slate-100 hover:bg-slate-800 gap-2 font-medium" onClick={exitZenMode}>
+              <Minimize className="w-5 h-5" />
+              Thoát Không Gian
             </Button>
-            <span className="text-xs text-slate-400 font-medium mt-4">Chế độ này sẽ phóng to toàn màn hình và tự lưu lại lịch trình</span>
+          </div>
+
+          {targetTotalMinutes > 0 && selectedTaskId !== 'none' && (
+            <div className="absolute top-8 right-8 text-right">
+              <div className={`px-4 py-2 rounded-xl flex items-center gap-3 border ${
+                isNearTarget ? 'bg-rose-950/50 border-rose-500/50 text-rose-300' : 'bg-slate-900/50 border-slate-700 text-slate-300'
+              }`}>
+                <Clock className="w-5 h-5" />
+                <div className="flex flex-col items-end">
+                  <span className="text-xs font-semibold tracking-wider uppercase opacity-70">Tiến độ mục tiêu</span>
+                  <span className="font-bold">{pastSessionsMinutes} phút / {targetTotalMinutes} phút</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col items-center w-full max-w-2xl px-6">
+            <div className="mb-12 text-center space-y-3">
+              <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/50 border border-slate-700 font-medium text-sm mb-2 shadow-sm transition-colors ${timerMode === 'BREAK' ? 'text-sky-400' : 'text-indigo-400'}`}>
+                {timerMode === 'BREAK' ? <Coffee className="w-4 h-4" /> : <Target className="w-4 h-4" />}
+                {timerMode === 'BREAK' ? 'MÀN NGHỈ NGƠI 5 PHÚT' : 'ĐANG TẬP TRUNG CAO ĐỘ'}
+              </div>
+              {selectedTask ? (
+                <>
+                  <h2 className="text-3xl font-black tracking-tight text-white">{selectedTask.title}</h2>
+                  <p className="text-slate-400 font-medium">Môn học: {selectedTask.subject?.name || 'Chưa phân loại'}</p>
+                </>
+              ) : (
+                <h2 className="text-3xl font-black tracking-tight text-white">Chế độ Học Tự Do</h2>
+              )}
+            </div>
+
+            <div className="relative mb-16 mt-4">
+              {pomodoroActive && (
+                <div className={`absolute inset-0 ${timerMode === 'BREAK' ? 'bg-sky-500' : 'bg-indigo-500'}/20 rounded-full animate-ping opacity-20 scale-125 pointer-events-none`} style={{ animationDuration: '3s' }} />
+              )}
+              <div className={`w-[22rem] h-[22rem] rounded-full flex items-center flex-col justify-center relative z-10 bg-slate-900 border-2 transition-all duration-700 shadow-2xl ${
+                pomodoroActive ? `border-${timerMode === 'BREAK' ? 'sky' : 'indigo'}-500/50` : 'border-slate-800 shadow-xl'
+              }`}>
+                <div className={`text-8xl font-mono tracking-tighter font-black z-20 transition-colors drop-shadow-md ${pomodoroActive ? (timerMode === 'BREAK' ? 'text-sky-400' : 'text-indigo-400') : 'text-slate-300'}`}>
+                  {formatTime(timeLeft)}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-6 z-20 relative">
+              <Button size="lg" onClick={toggleTimer} className={`h-16 rounded-full px-12 shadow-xl font-bold text-xl transition-all border-none ${pomodoroActive ? "bg-slate-800 hover:bg-slate-700 text-white" : "bg-indigo-600 hover:bg-indigo-500"}`}>
+                {pomodoroActive ? <Pause className="w-6 h-6 mr-3" /> : <Play className="w-6 h-6 mr-3" />}
+                {pomodoroActive ? "Tạm dừng" : "Bắt đầu cày"}
+              </Button>
+            </div>
           </div>
         </div>
+      ) : (
+        <div className="flex flex-col h-full bg-slate-50 min-h-[calc(100vh-theme(spacing.16))] relative">
+          <div className="p-8 max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center relative z-10">
+            <div className="mb-8">
+              <Button variant="ghost" className="text-slate-500 gap-2 hover:bg-slate-200" onClick={() => navigate(-1)}>
+                <ArrowLeft className="w-4 h-4" />
+                Trở lại danh sách
+              </Button>
+            </div>
+
+            <div className="bg-white p-10 rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center">
+              <div className="flex items-center gap-3 text-indigo-900 mb-2">
+                <Target className="w-8 h-8 text-indigo-600" />
+                <h1 className="text-3xl font-black uppercase tracking-tight">Khu vực tập trung</h1>
+              </div>
+              <p className="text-slate-500 mb-10 font-medium">Chuẩn bị trước khi bước vào không gian tĩnh lặng</p>
+              
+              <div className="w-full max-w-lg mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <label className="text-sm font-bold text-slate-700 uppercase mb-3 block">Lựa chọn Nhiệm vụ</label>
+                <Select value={selectedTaskId} onValueChange={setSelectedTaskId}>
+                  <SelectTrigger className="w-full h-14 bg-white border-slate-200 text-slate-800 font-medium text-lg shadow-sm">
+                    <SelectValue placeholder="-- Không chọn công việc --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">-- Học tự do (Không lưu lịch sử) --</SelectItem>
+                    {tasks.map(t => (
+                      <SelectItem key={t.id} value={t.id.toString()}>{t.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-full max-w-lg flex flex-col items-center">
+                <div className="w-full max-w-lg mb-10 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <Music className="w-5 h-5 text-indigo-600" />
+                      <label className="text-sm font-bold text-slate-700 uppercase tracking-tight">Âm thanh tập trung</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-400 uppercase">{isMusicEnabled ? 'Bật' : 'Tắt'}</span>
+                      <Switch checked={isMusicEnabled} onCheckedChange={setIsMusicEnabled} />
+                    </div>
+                  </div>
+                  
+                  <div className={`grid grid-cols-3 gap-3 transition-all duration-300 ${!isMusicEnabled ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
+                    {Object.entries(musicTracks).map(([id, track]) => {
+                      const Icon = id === 'lofi' ? Coffee : id === 'rain' ? CloudRain : Wind;
+                      return (
+                        <button key={id} onClick={() => togglePreview(id)} className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${selectedTrack === id ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}>
+                          <Icon className="w-5 h-5" />
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-tighter">{track.name}</span>
+                            {selectedTrack === id && isPlaying && <Sparkles className="w-2.5 h-2.5 animate-pulse text-indigo-500" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {isMusicEnabled && (
+                    <div className="mt-6 flex items-center gap-4 bg-white p-3 rounded-xl border border-slate-100">
+                      <div className="text-slate-400">{volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}</div>
+                      <div className="flex-1">
+                        <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-400 w-8">{Math.round(volume * 100)}%</span>
+                    </div>
+                  )}
+                </div>
+
+                <Button size="lg" onClick={enterZenMode} className="w-full h-16 rounded-2xl shadow-lg shadow-indigo-200 font-bold text-xl transition-all bg-indigo-600 hover:bg-indigo-700 hover:scale-[1.02]">
+                  <Maximize className="w-6 h-6 mr-3" />
+                  Tiến Vào Không Gian Tập Trung
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* ALWAYS RENDERED - YouTube Player */}
+      <div className="fixed bottom-0 right-0 opacity-0 pointer-events-none scale-0 overflow-hidden w-1 h-1">
+        <iframe
+          ref={iframeRef}
+          src={`https://www.youtube.com/embed/${musicTracks[selectedTrack].url}?enablejsapi=1&autoplay=1&mute=0&controls=0&origin=${window.location.origin}`}
+          allow="autoplay; encrypted-media"
+          title="Study Music Provider"
+        />
       </div>
     </div>
   );
