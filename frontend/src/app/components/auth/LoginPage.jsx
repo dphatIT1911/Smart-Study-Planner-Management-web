@@ -37,8 +37,14 @@ export default function LoginPage() {
       navigate('/');
     } catch (err) {
       console.error('Login error:', err);
-      if (err.message.includes('Failed to fetch')) {
-        setError('Không thể kết nối đến máy chủ API. Vui lòng kiểm tra xem Backend trên Render đã hoạt động chưa (có thể đang khởi động nguội).');
+      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('fetch')) {
+        const isProd = import.meta.env.PROD;
+        const apiUrl = import.meta.env.VITE_API_URL;
+        if (isProd && !apiUrl) {
+          setError('Lỗi cấu hình: VITE_API_URL chưa được thiết lập trên Render. Vào Render Dashboard → frontend service → Environment → thêm VITE_API_URL = URL của backend service.');
+        } else {
+          setError('Không thể kết nối đến máy chủ API. Vui lòng kiểm tra Backend trên Render đã hoạt động chưa (có thể đang khởi động nguội - chờ 30-60 giây rồi thử lại).');
+        }
       } else if (err.message.includes('404')) {
         setError('Không tìm thấy API (404). Vui lòng kiểm tra cấu hình VITE_API_URL trên Render.');
       } else {

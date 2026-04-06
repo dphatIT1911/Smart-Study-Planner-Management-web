@@ -64,7 +64,12 @@ export default function TaskList({ tasks }) {
                 <div className="flex items-center gap-6 text-xs text-gray-500 font-bold">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-gray-300" />
-                    <span>{task.due_date ? format(new Date(task.due_date), 'dd/MM') : 'Không có hạn'}</span>
+                    <span>
+                      {(() => {
+                        const date = task.parsedDueDate || (task.due_date ? new Date(task.due_date.includes('T') && !task.due_date.endsWith('Z') ? `${task.due_date}Z` : task.due_date) : null);
+                        return date ? format(date, 'dd/MM') : 'Không có hạn';
+                      })()}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-gray-300" />

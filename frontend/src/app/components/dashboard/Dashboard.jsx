@@ -56,13 +56,33 @@ export default function Dashboard() {
 
         setSubjects(Array.isArray(allSubjects) ? allSubjects.slice(0, 4) : []);
 
+        // Helper to parse dates correctly as UTC even if 'Z' is missing
+        const safeParseDate = (dateStr) => {
+          if (!dateStr) return null;
+          const formattedStr = dateStr.includes('T') && !dateStr.endsWith('Z') && !dateStr.includes('+') 
+            ? `${dateStr}Z` 
+            : dateStr;
+          return new Date(formattedStr);
+        };
+
         const mappedTasks = Array.isArray(allTasks) ? allTasks.map(task => ({
           ...task,
-          subject: task.subject_id ? allSubjects.find(s => s.id?.toString() === task.subject_id?.toString()) : null
+          subject: task.subject_id ? allSubjects.find(s => s.id?.toString() === task.subject_id?.toString()) : null,
+          parsedDueDate: task.due_date ? safeParseDate(task.due_date) : null
         })) : [];
 
         setTasks(mappedTasks.slice(0, 5));
-        setRecentSession(Array.isArray(allSessions) ? allSessions[0] || null : null);
+
+        const topSession = Array.isArray(allSessions) ? allSessions[0] || null : null;
+        if (topSession) {
+          const parsedDate = safeParseDate(topSession.start_time);
+          setRecentSession({
+            ...topSession,
+            subject: topSession.task?.subject?.name || 'Phiên học nhanh',
+            subjectColor: topSession.task?.subject?.color || '#6366f1',
+            localDate: parsedDate ? parsedDate.toLocaleDateString('vi-VN') : 'Gần đây'
+          });
+        }
         
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
@@ -292,12 +312,7 @@ export default function Dashboard() {
           <TaskList tasks={tasks} />
         </div>
         <div className="space-y-6">
-          <SessionTracker recentSession={recentSession ? {
-            subject: recentSession.task?.subject?.name || 'Phiên học nhanh',
-            subjectColor: recentSession.task?.subject?.color || '#6366f1',
-            durationMinutes: recentSession.duration_minutes || 0,
-            notes: recentSession.notes
-          } : null} />
+          <SessionTracker recentSession={recentSession} />
         </div>
       </div>
     </div>

@@ -12,7 +12,7 @@ class NotificationService:
     @staticmethod
     async def check_and_send_deadline_reminders(db: Session):
         """
-        Scans for tasks whose deadline is within the next 24 hours 
+        Scans for tasks whose deadline is within the next 10 minutes 
         and haven't had a reminder sent yet.
         """
         now = datetime.now(timezone.utc).replace(tzinfo=None) # Assume DB stores UTC without tzinfo
@@ -35,7 +35,7 @@ class NotificationService:
         )
         
         if not tasks_to_remind:
-            logger.info("No deadlines approaching in the next 24h.")
+            logger.info("No deadlines approaching in the next 10 minutes.")
             return
             
         logger.info(f"Found {len(tasks_to_remind)} tasks needing reminders.")

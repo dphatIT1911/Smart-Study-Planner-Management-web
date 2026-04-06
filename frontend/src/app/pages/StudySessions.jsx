@@ -45,13 +45,26 @@ export default function StudySessions() {
          subject: subjectsData.find(s => s.id?.toString() === task.subject_id?.toString())
       }));
       
+      // Helper to parse dates correctly as UTC even if 'Z' is missing
+      const safeParseDate = (dateStr) => {
+        if (!dateStr) return new Date();
+        // If it looks like ISO but missing 'Z', add it to force UTC interpretation
+        const formattedStr = dateStr.includes('T') && !dateStr.endsWith('Z') && !dateStr.includes('+') 
+          ? `${dateStr}Z` 
+          : dateStr;
+        return new Date(formattedStr);
+      };
+
       const mappedSessions = sessionsData.map(session => ({
          ...session,
-         task: mappedTasks.find(t => t.id?.toString() === session.task_id?.toString())
+         task: mappedTasks.find(t => t.id?.toString() === session.task_id?.toString()),
+         // Standardize dates right here
+         parsedStart: safeParseDate(session.start_time),
+         parsedEnd: session.end_time ? safeParseDate(session.end_time) : null
       }));
       
       // Sort sessions by end_time descending (newest first)
-      mappedSessions.sort((a, b) => new Date(b.end_time || b.start_time) - new Date(a.end_time || a.start_time));
+      mappedSessions.sort((a, b) => (b.parsedEnd || b.parsedStart) - (a.parsedEnd || a.parsedStart));
       
       setSessions(mappedSessions);
       setTasks(mappedTasks.filter(t => t.status !== 'DONE')); // Only show active tasks
@@ -60,11 +73,16 @@ export default function StudySessions() {
       if (mappedSessions.length > 0) {
         const total = mappedSessions.reduce((acc, s) => acc + (s.duration_minutes || 0), 0);
         const longest = Math.max(...mappedSessions.map(s => s.duration_minutes || 0));
-        const avg = total / mappedSessions.length; // Simplified avg
+        
+        // Calculate average per UNIQUE day
+        const uniqueDays = new Set(mappedSessions.map(s => s.parsedStart.toDateString()));
+        
+        const dayCount = uniqueDays.size || 1;
+        const avgPerDay = total / dayCount;
         
         setStats({
           totalMinutes: total,
-          averagePerDay: Math.round(avg * 10) / 10,
+          averagePerDay: Math.round(avgPerDay * 10) / 10,
           longestSession: longest
         });
       }
@@ -221,12 +239,23 @@ export default function StudySessions() {
                         <div className="flex items-center gap-5 mt-4 text-sm text-gray-500 font-medium">
                           <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-full">
                             <Calendar className="w-4 h-4 text-gray-400" />
-                            <span>{session.start_time ? format(new Date(session.start_time), 'dd/MM/yyyy') : 'Gần đây'}</span>
+                            <span>{session.parsedStart ? format(session.parsedStart, 'dd/MM/yyyy') : 'Gần đây'}</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-full">
                             <Clock className="w-4 h-4 text-gray-400" />
                             <span>
-                              {format(new Date(session.start_time), 'HH:mm')} - {session.end_time ? format(new Date(session.end_time), 'HH:mm') : 'Bây giờ'}
+                              {(() => {
+                                const start = session.parsedStart;
+                                const end = session.parsedEnd || new Date(start.getTime() + (session.duration_minutes || 0) * 60000);
+                                
+                                // Logic to ensure a valid range for display
+                                let displayStart = start;
+                                if (session.end_time && start.getTime() === end.getTime() && session.duration_minutes > 0) {
+                                   displayStart = new Date(end.getTime() - session.duration_minutes * 60000);
+                                }
+
+                                return `${format(displayStart, 'HH:mm')} - ${format(end, 'HH:mm')}`;
+                              })()}
                             </span>
                           </div>
                         </div>
