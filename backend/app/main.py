@@ -28,18 +28,14 @@ def create_app() -> FastAPI:
     app.add_middleware(AuthMiddleware)
 
     # CORSMiddleware is added last to wrap all inner middlewares (Auth, etc.)
-    # Build specific origins
     origins = [str(o).rstrip("/") for o in settings.BACKEND_CORS_ORIGINS]
     
-    # Use a more robust CORS configuration
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origins if "*" not in origins else ["*"],
-        allow_origin_regex=r"https?://.*\.onrender\.com" if "*" in origins else None,
-        allow_credentials=True if "*" not in origins else False,
+        allow_origins=origins,
+        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["*"],
     )
 
     # Include all API routers
