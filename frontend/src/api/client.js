@@ -1,5 +1,7 @@
-// Lấy URL từ biến môi trường của Vite, nếu không có thì fallback về localhost (môi trường dev cục bộ)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// URL gốc của API phụ thuộc vào môi trường
+const API_BASE_URL = import.meta.env.DEV 
+  ? 'http://localhost:8000' 
+  : import.meta.env.VITE_API_URL;
 
 /**
  * Trình gửi Yêu cầu HTTP cơ bản đến Backend
