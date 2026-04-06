@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { BookOpen, Loader2, AlertCircle } from 'lucide-react';
+import { BookOpen, Loader2, AlertCircle, Wifi } from 'lucide-react';
 import { api } from '../../api';
+
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 20000; // 20 giây mỗi lần retry
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -13,47 +16,86 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [warmingUp, setWarmingUp] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
+  const countdownRef = useRef(null);
+  const formDataRef = useRef(null);
+
+  useEffect(() => {
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+  }, []);
+
+  const startRetryCountdown = (onRetry) => {
+    setWarmingUp(true);
+    setCountdown(RETRY_DELAY_MS / 1000);
+    countdownRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(countdownRef.current);
+          setWarmingUp(false);
+          onRetry();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const attemptLogin = async (formData, attempt = 1) => {
+    try {
+      const data = await api.login(formData);
+      localStorage.setItem('token', data.access_token);
+      const profile = await api.getProfile();
+      localStorage.setItem('user', JSON.stringify(profile));
+      setLoading(false);
+      setWarmingUp(false);
+      navigate('/');
+    } catch (err) {
+      const isNetworkError = err.message.includes('Failed to fetch') || 
+                             err.message.includes('NetworkError') ||
+                             err.message.includes('fetch');
+      if (isNetworkError && attempt < MAX_RETRIES) {
+        setRetryCount(attempt);
+        startRetryCountdown(() => attemptLogin(formData, attempt + 1));
+      } else if (isNetworkError) {
+        setLoading(false);
+        setWarmingUp(false);
+        setRetryCount(0);
+        setError('Không thể kết nối sau nhiều lần thử. Backend có thể đang gặp sự cố. Vui lòng thử lại sau vài phút.');
+      } else {
+        setLoading(false);
+        setWarmingUp(false);
+        setRetryCount(0);
+        if (err.message.includes('404')) {
+          setError('Không tìm thấy API (404). Vui lòng kiểm tra cấu hình VITE_API_URL trên Render.');
+        } else {
+          setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+        }
+      }
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setRetryCount(0);
 
-    try {
-      if (!email || !password) {
-        throw new Error('Vui lòng nhập Email và Mật khẩu');
-      }
-
-      const formData = new FormData();
-      formData.append('username', email);
-      formData.append('password', password);
-
-      const data = await api.login(formData);
-      localStorage.setItem('token', data.access_token);
-      
-      const profile = await api.getProfile();
-      localStorage.setItem('user', JSON.stringify(profile));
-      
-      navigate('/');
-    } catch (err) {
-      console.error('Login error:', err);
-      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('fetch')) {
-        const isProd = import.meta.env.PROD;
-        const apiUrl = import.meta.env.VITE_API_URL;
-        if (isProd && !apiUrl) {
-          setError('Lỗi cấu hình: VITE_API_URL chưa được thiết lập trên Render. Vào Render Dashboard → frontend service → Environment → thêm VITE_API_URL = URL của backend service.');
-        } else {
-          setError('Không thể kết nối đến máy chủ API. Vui lòng kiểm tra Backend trên Render đã hoạt động chưa (có thể đang khởi động nguội - chờ 30-60 giây rồi thử lại).');
-        }
-      } else if (err.message.includes('404')) {
-        setError('Không tìm thấy API (404). Vui lòng kiểm tra cấu hình VITE_API_URL trên Render.');
-      } else {
-        setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
-      }
-    } finally {
-      setLoading(false);
+    if (!email || !password) {
+      setError('Vui lòng nhập Email và Mật khẩu');
+      return;
     }
+
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('username', email);
+    formData.append('password', password);
+    formDataRef.current = formData;
+
+    await attemptLogin(formData, 1);
   };
+
+  const progressPercent = warmingUp ? ((RETRY_DELAY_MS / 1000 - countdown) / (RETRY_DELAY_MS / 1000)) * 100 : 0;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -68,11 +110,32 @@ export default function LoginPage() {
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2 text-sm animate-in fade-in slide-in-from-top-1">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-start gap-2 text-sm">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <p>{error}</p>
               </div>
             )}
+
+            {warmingUp && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wifi className="w-4 h-4 animate-pulse flex-shrink-0" />
+                  <p className="font-semibold">
+                    Server đang khởi động... ({retryCount}/{MAX_RETRIES - 1})
+                  </p>
+                </div>
+                <p className="text-xs text-amber-600 mb-2">
+                  Render Free tier cần 30-60 giây để wake up. Tự động thử lại sau <strong>{countdown}s</strong>...
+                </p>
+                <div className="w-full bg-amber-100 rounded-full h-1.5">
+                  <div
+                    className="bg-amber-500 h-1.5 rounded-full transition-all duration-1000"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -81,9 +144,8 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
+                disabled={loading || warmingUp}
                 required />
-              
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Mật khẩu</Label>
@@ -93,21 +155,25 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
+                disabled={loading || warmingUp}
                 required />
-              
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 transition-all font-semibold py-6 text-base"
-              disabled={loading}
+              disabled={loading || warmingUp}
             >
-              {loading ? (
+              {loading && !warmingUp ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Đang xác thực...
+                </>
+              ) : warmingUp ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Đang chờ server ({countdown}s)...
                 </>
               ) : (
                 'Đăng nhập'
@@ -122,6 +188,6 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
-    </div>);
-
+    </div>
+  );
 }
