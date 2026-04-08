@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router';
 import { Button } from '../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Play, Pause, RotateCcw, Target, CheckCircle2, ArrowLeft, Maximize, Minimize, Clock, Coffee, AlertTriangle, Music, Volume2, VolumeX, Wind, CloudRain, Sparkles } from 'lucide-react';
- import { Switch } from '../components/ui/switch'; // Music toggle component
+import { Switch } from '../components/ui/switch'; // Music toggle component
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
 import { api } from '../api';
@@ -15,14 +15,14 @@ export default function FocusSpace() {
 
   const [tasks, setTasks] = useState([]);
   const [selectedTaskId, setSelectedTaskId] = useState(initialTaskId || 'none');
-  
+
   const [isZenMode, setIsZenMode] = useState(false);
   const [pomodoroTarget, setPomodoroTarget] = useState(25);
   const [timerMode, setTimerMode] = useState('FOCUS'); // 'FOCUS' or 'BREAK'
   const [pomodoroActive, setPomodoroActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [elapsedSeconds, setElapsedSeconds] = useState(0); // Track ACTUAL study time
-  
+
   // Music Settings
   const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
     return localStorage.getItem('study_music_enabled') === 'true';
@@ -35,20 +35,20 @@ export default function FocusSpace() {
 
   // Music Tracks Data (YouTube IDs)
   const musicTracks = {
-    lofi: { 
-      name: 'Lofi Chill', 
+    lofi: {
+      name: 'Lofi Chill',
       url: 'jfKfPfyJRdk', // Lofi Girl Radio
-      icon: 'Coffee' 
+      icon: 'Coffee'
     },
-    rain: { 
-      name: 'Tiếng Mưa', 
+    rain: {
+      name: 'Tiếng Mưa',
       url: 'mPZkdNFkNps', // Rain for 10 hours
-      icon: 'CloudRain' 
+      icon: 'CloudRain'
     },
-    nature: { 
-      name: 'Thiên Nhiên', 
+    nature: {
+      name: 'Thiên Nhiên',
       url: '6uv69vwyB_M', // Forest sounds
-      icon: 'Wind' 
+      icon: 'Wind'
     }
   };
 
@@ -82,7 +82,7 @@ export default function FocusSpace() {
     };
 
     const shouldPlay = isMusicEnabled && pomodoroActive && timerMode === 'FOCUS';
-    
+
     // Small delay to ensure iframe is ready if the track just changed
     const timer = setTimeout(() => {
       if (shouldPlay) {
@@ -102,7 +102,7 @@ export default function FocusSpace() {
   // Preview Music Logic (YouTube Version)
   const togglePreview = (trackId) => {
     const isChanging = selectedTrack !== trackId;
-    
+
     if (!isChanging && isPlaying && !pomodoroActive) {
       // Toggle off if clicking the same track
       setSelectedTrack(trackId);
@@ -142,7 +142,7 @@ export default function FocusSpace() {
   }, [selectedTaskId]);
 
   const selectedTask = tasks.find(t => t.id.toString() === selectedTaskId.toString());
-  
+
   // Calculate remaining global time vs estimated minutes
   const targetTotalMinutes = selectedTask?.estimated_minutes || 0;
   const minutesRemainingToTarget = targetTotalMinutes > 0 ? Math.max(0, targetTotalMinutes - pastSessionsMinutes) : 0;
@@ -151,31 +151,31 @@ export default function FocusSpace() {
   const savePartialSession = async (currentElapsedSeconds, mode) => {
     if (mode === 'FOCUS' && selectedTaskIdRef.current && selectedTaskIdRef.current !== 'none' && currentElapsedSeconds > 0) {
       const durationMin = Math.floor((currentElapsedSeconds + 10) / 60);
-      
+
       if (durationMin <= 0) {
         setElapsedSeconds(0);
         setSessionStartTime(null);
-        toast.info('Học hơi "nén" nhỉ?', { description: 'Chưa đầy 50 giây nên chưa bõ công hệ thống ghi nhận. Cố thêm tí nữa nhé! 💪'});
+        toast.info('Học hơi "nén" nhỉ?', { description: 'Chưa đầy 50 giây nên chưa bõ công hệ thống ghi nhận. Cố thêm tí nữa nhé! 💪' });
         return;
       }
-      
+
       try {
-         const now = new Date();
-         const endTime = now.toISOString();
-         // Ensure startTime is significantly before endTime
-         const startTime = sessionStartTime || new Date(now.getTime() - currentElapsedSeconds * 1000).toISOString();
-         
-         await api.sessions.create({
-           task_id: parseInt(selectedTaskIdRef.current),
-           start_time: startTime,
-           end_time: endTime,
-           duration_minutes: durationMin
-         });
-         setPastSessionsMinutes(prev => prev + durationMin);
-         setElapsedSeconds(0); 
-         toast.success('Đỉnh chóp! 🚀', { description: `Đã nạp thành công +${durationMin} phút vào não bộ. Tiếp tục phát huy nào!`});
+        const now = new Date();
+        const endTime = now.toISOString();
+        // Ensure startTime is significantly before endTime
+        const startTime = sessionStartTime || new Date(now.getTime() - currentElapsedSeconds * 1000).toISOString();
+
+        await api.sessions.create({
+          task_id: parseInt(selectedTaskIdRef.current),
+          start_time: startTime,
+          end_time: endTime,
+          duration_minutes: durationMin
+        });
+        setPastSessionsMinutes(prev => prev + durationMin);
+        setElapsedSeconds(0);
+        toast.success('Đỉnh chóp! 🚀', { description: `Đã nạp thành công +${durationMin} phút vào não bộ. Tiếp tục phát huy nào!` });
       } catch (err) {
-         console.error("Lỗi lưu session", err);
+        console.error("Lỗi lưu session", err);
       }
     }
     setSessionStartTime(null);
@@ -183,7 +183,7 @@ export default function FocusSpace() {
 
   const handleTimerComplete = async (mode) => {
     setPomodoroActive(false);
-    
+
     if (mode === 'FOCUS') {
       await savePartialSession(elapsedSecondsRef.current, 'FOCUS');
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
@@ -219,18 +219,18 @@ export default function FocusSpace() {
       if (document.fullscreenElement && document.exitFullscreen) {
         await document.exitFullscreen();
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
     const handleFullscreenChange = async () => {
       if (!document.fullscreenElement && isZenMode) {
-      if (pomodoroActive && timerMode === 'FOCUS') {
-         // This is triggered by ESC - Use Ref for absolute latest value
-         await savePartialSession(elapsedSecondsRef.current, timerMode);
-      }
-      setIsZenMode(false);
-      setPomodoroActive(false);
+        if (pomodoroActive && timerMode === 'FOCUS') {
+          // This is triggered by ESC - Use Ref for absolute latest value
+          await savePartialSession(elapsedSecondsRef.current, timerMode);
+        }
+        setIsZenMode(false);
+        setPomodoroActive(false);
       }
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -242,13 +242,13 @@ export default function FocusSpace() {
     if (pomodoroActive) {
       interval = setInterval(() => {
         if (timeLeftRef.current > 0) {
-           if (timerMode === 'BREAK' && timeLeftRef.current === 60) {
-             toast.info('Chuẩn bị nhé!', { description: 'Còn 1 phút nữa là hết giờ nghỉ ngơi rồi.' });
-           }
-           setTimeLeft(prev => prev - 1);
-           if (timerMode === 'FOCUS') {
-              setElapsedSeconds(prev => prev + 1);
-           }
+          if (timerMode === 'BREAK' && timeLeftRef.current === 60) {
+            toast.info('Chuẩn bị nhé!', { description: 'Còn 1 phút nữa là hết giờ nghỉ ngơi rồi.' });
+          }
+          setTimeLeft(prev => prev - 1);
+          if (timerMode === 'FOCUS') {
+            setElapsedSeconds(prev => prev + 1);
+          }
         } else {
           clearInterval(interval);
           handleTimerComplete(timerMode);
@@ -308,9 +308,8 @@ export default function FocusSpace() {
 
           {targetTotalMinutes > 0 && selectedTaskId !== 'none' && (
             <div className="absolute top-8 right-8 text-right">
-              <div className={`px-4 py-2 rounded-xl flex items-center gap-3 border ${
-                isNearTarget ? 'bg-rose-950/50 border-rose-500/50 text-rose-300' : 'bg-slate-900/50 border-slate-700 text-slate-300'
-              }`}>
+              <div className={`px-4 py-2 rounded-xl flex items-center gap-3 border ${isNearTarget ? 'bg-rose-950/50 border-rose-500/50 text-rose-300' : 'bg-slate-900/50 border-slate-700 text-slate-300'
+                }`}>
                 <Clock className="w-5 h-5" />
                 <div className="flex flex-col items-end">
                   <span className="text-xs font-semibold tracking-wider uppercase opacity-70">Tiến độ mục tiêu</span>
@@ -340,15 +339,14 @@ export default function FocusSpace() {
               {pomodoroActive && (
                 <div className={`absolute inset-0 ${timerMode === 'BREAK' ? 'bg-sky-500' : 'bg-indigo-500'}/20 rounded-full animate-ping opacity-20 scale-125 pointer-events-none`} style={{ animationDuration: '3s' }} />
               )}
-              <div className={`w-[22rem] h-[22rem] rounded-full flex items-center flex-col justify-center relative z-10 bg-slate-900 border-2 transition-all duration-700 shadow-2xl ${
-                pomodoroActive ? `border-${timerMode === 'BREAK' ? 'sky' : 'indigo'}-500/50` : 'border-slate-800 shadow-xl'
-              }`}>
+              <div className={`w-[22rem] h-[22rem] rounded-full flex items-center flex-col justify-center relative z-10 bg-slate-900 border-2 transition-all duration-700 shadow-2xl ${pomodoroActive ? `border-${timerMode === 'BREAK' ? 'sky' : 'indigo'}-500/50` : 'border-slate-800 shadow-xl'
+                }`}>
                 <div className={`text-8xl font-mono tracking-tighter font-black z-20 transition-colors drop-shadow-md ${pomodoroActive ? (timerMode === 'BREAK' ? 'text-sky-400' : 'text-indigo-400') : 'text-slate-300'}`}>
                   {formatTime(timeLeft)}
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-6 z-20 relative">
               <Button size="lg" onClick={toggleTimer} className={`h-16 rounded-full px-12 shadow-xl font-bold text-xl transition-all border-none ${pomodoroActive ? "bg-slate-800 hover:bg-slate-700 text-white" : "bg-indigo-600 hover:bg-indigo-500"}`}>
                 {pomodoroActive ? <Pause className="w-6 h-6 mr-3" /> : <Play className="w-6 h-6 mr-3" />}
@@ -361,10 +359,6 @@ export default function FocusSpace() {
         <div className="flex flex-col h-full bg-slate-50 min-h-[calc(100vh-theme(spacing.16))] relative">
           <div className="p-8 max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center relative z-10">
             <div className="mb-8">
-              <Button variant="ghost" className="text-slate-500 gap-2 hover:bg-slate-200" onClick={() => navigate(-1)}>
-                <ArrowLeft className="w-4 h-4" />
-                Trở lại danh sách
-              </Button>
             </div>
 
             <div className="bg-white p-10 rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center">
@@ -373,7 +367,7 @@ export default function FocusSpace() {
                 <h1 className="text-3xl font-black uppercase tracking-tight">Khu vực tập trung</h1>
               </div>
               <p className="text-slate-500 mb-10 font-medium">Chuẩn bị trước khi bước vào không gian tĩnh lặng</p>
-              
+
               <div className="w-full max-w-lg mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
                 <label className="text-sm font-bold text-slate-700 uppercase mb-3 block">Lựa chọn Nhiệm vụ</label>
                 <Select value={selectedTaskId} onValueChange={setSelectedTaskId}>
@@ -401,7 +395,7 @@ export default function FocusSpace() {
                       <Switch checked={isMusicEnabled} onCheckedChange={setIsMusicEnabled} />
                     </div>
                   </div>
-                  
+
                   <div className={`grid grid-cols-3 gap-3 transition-all duration-300 ${!isMusicEnabled ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
                     {Object.entries(musicTracks).map(([id, track]) => {
                       const Icon = id === 'lofi' ? Coffee : id === 'rain' ? CloudRain : Wind;
@@ -437,7 +431,7 @@ export default function FocusSpace() {
           </div>
         </div>
       )}
-      
+
       {/* ALWAYS RENDERED - YouTube Player */}
       <div className="fixed bottom-0 right-0 opacity-0 pointer-events-none scale-0 overflow-hidden w-1 h-1">
         <iframe
