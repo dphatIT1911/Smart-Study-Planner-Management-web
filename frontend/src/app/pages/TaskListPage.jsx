@@ -7,7 +7,7 @@ import TaskTableView from '../components/tasks/TaskTableView';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
 import { api } from '../api';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 
 export default function TaskListPage() {
   const [tasks, setTasks] = useState([]);
@@ -20,6 +20,18 @@ export default function TaskListPage() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const taskIdParam = searchParams.get('taskId');
+
+  useEffect(() => {
+    if (tasks.length > 0 && taskIdParam) {
+      const foundTask = tasks.find(t => t.id.toString() === taskIdParam);
+      if (foundTask) {
+        setSelectedTask(foundTask);
+        setIsModalOpen(true);
+      }
+    }
+  }, [tasks, taskIdParam]);
 
   useEffect(() => {
     const fetchData = async () => {
