@@ -1,10 +1,11 @@
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timezone
 from app.models.task import Task
 from app.schemas.task import TaskCreate, TaskUpdate
 from app.services.base import CRUDBase
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 class CRUDTask(CRUDBase[Task, TaskCreate, TaskUpdate]):
     def create_with_owner(
@@ -41,5 +42,22 @@ class CRUDTask(CRUDBase[Task, TaskCreate, TaskUpdate]):
         # Access enum value correctly
         status_value = task.status.value if hasattr(task.status, 'value') else task.status
         return status_value != "DONE" and task.due_date < now
+
+    async def get_tasks_for_calendar(
+        self, db: "AsyncSession", *, user_id: int, start_date: datetime, end_date: datetime
+    ) -> List[Task]:
+        from app.models.subject import Subject
+        query = (
+            select(self.model)
+            .where(
+                self.model.user_id == user_id,
+                self.model.due_date.between(start_date, end_date)
+            )
+            .options(
+                joinedload(self.model.subject).load_only(Subject.name, Subject.color)
+            )
+        )
+        result = await db.execute(query)
+        return list(result.scalars().unique().all())
         
 task_service = CRUDTask(Task)

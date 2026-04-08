@@ -1,10 +1,12 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
 
 from app.api.deps import get_db, get_current_user
 from app.models.user import User
-from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskStatus
+from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskStatus, TaskCalendarResponse
 from app.services.task import task_service
 
 router = APIRouter()
@@ -27,6 +29,36 @@ def read_tasks(
     for task in tasks:
         task.is_overdue = task_service.is_overdue(task)
     return tasks
+
+@router.get("/calendar", response_model=List[TaskCalendarResponse])
+async def get_calendar(
+    start_date: datetime = Query(...),
+    end_date: datetime = Query(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Get tasks for calendar view.
+    """
+    tasks = await task_service.get_tasks_for_calendar(
+        db=db, user_id=current_user.id, start_date=start_date, end_date=end_date
+    )
+    
+    responses = []
+    for task in tasks:
+        responses.append(
+            TaskCalendarResponse(
+                id=task.id,
+                title=task.title,
+                due_date=task.due_date,
+                status=task.status,
+                priority=task.priority,
+                subject_name=task.subject.name if task.subject else None,
+                subject_color=task.subject.color if task.subject else None,
+                is_overdue=task_service.is_overdue(task)
+            )
+        )
+    return responses
 
 @router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(

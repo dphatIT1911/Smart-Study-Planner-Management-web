@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import ForeignKey, String, Text, DateTime, Integer, Enum
+from sqlalchemy import ForeignKey, String, Text, DateTime, Integer, Enum, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -19,6 +19,10 @@ class TaskPriority(str, enum.Enum):
 
 class Task(Base):
     __tablename__ = "tasks"
+
+    __table_args__ = (
+        Index("ix_task_user_id_due_date", "user_id", "due_date"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     subject_id: Mapped[Optional[int]] = mapped_column(ForeignKey("subjects.id"))
