@@ -47,6 +47,7 @@ export default function FocusSpace() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [elapsedSeconds, setElapsedSeconds] = useState(0); // Track ACTUAL study time
 
+
   // Music Settings
   const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
     return localStorage.getItem("study_music_enabled") === "true";
@@ -218,6 +219,7 @@ export default function FocusSpace() {
     ) {
       const durationMin = Math.floor((currentElapsedSeconds + 10) / 60);
 
+
       if (durationMin <= 0) {
         setElapsedSeconds(0);
         setSessionStartTime(null);
@@ -227,6 +229,7 @@ export default function FocusSpace() {
         });
         return;
       }
+
 
       try {
         const now = new Date();
@@ -248,6 +251,7 @@ export default function FocusSpace() {
           description: `Đã nạp thành công +${durationMin} phút vào não bộ. Tiếp tục phát huy nào!`,
         });
       } catch (err) {
+        console.error("Lỗi lưu session", err);
         console.error("Lỗi lưu session", err);
       }
     }
@@ -297,7 +301,7 @@ export default function FocusSpace() {
       if (document.fullscreenElement && document.exitFullscreen) {
         await document.exitFullscreen();
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
@@ -480,6 +484,7 @@ export default function FocusSpace() {
               </div>
             </div>
 
+
             <div className="flex items-center gap-6 z-20 relative">
               <Button
                 size="lg"
@@ -636,6 +641,7 @@ export default function FocusSpace() {
           </div>
         </div>
       )}
+
 
       {/* ALWAYS RENDERED - YouTube Player */}
       <div className="fixed bottom-0 right-0 opacity-0 pointer-events-none scale-0 overflow-hidden w-1 h-1">
