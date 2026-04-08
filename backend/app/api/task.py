@@ -1,7 +1,6 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 from app.api.deps import get_db, get_current_user
@@ -31,16 +30,16 @@ def read_tasks(
     return tasks
 
 @router.get("/calendar", response_model=List[TaskCalendarResponse])
-async def get_calendar(
+def get_calendar(
     start_date: datetime = Query(...),
     end_date: datetime = Query(...),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Get tasks for calendar view.
     """
-    tasks = await task_service.get_tasks_for_calendar(
+    tasks = task_service.get_tasks_for_calendar(
         db=db, user_id=current_user.id, start_date=start_date, end_date=end_date
     )
     

@@ -14,7 +14,14 @@ import { Clock, Calendar } from 'lucide-react';
 
 
 
-export default function SessionTracker({ recentSession }) {
+export default function SessionTracker({ recentSession: recentSessionProp, recentSessions }) {
+  const sessions = Array.isArray(recentSessions)
+    ? recentSessions
+    : recentSessionProp
+    ? [recentSessionProp]
+    : [];
+  const recentSession = sessions[0];
+
   if (!recentSession) {
     return (
       <Card>
@@ -43,7 +50,7 @@ export default function SessionTracker({ recentSession }) {
             <div
               className="w-12 h-12 rounded-lg flex items-center justify-center"
               style={{ backgroundColor: recentSession.subjectColor + '20' }}>
-              
+
               <Clock className="w-6 h-6" style={{ color: recentSession.subjectColor }} />
             </div>
             <div className="flex-1">

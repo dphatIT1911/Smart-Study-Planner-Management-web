@@ -4,6 +4,7 @@ from pydantic import Field, model_validator
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Study Planner App"
+    ENVIRONMENT: str = Field("development", description="Application environment: development/production")
     # Provide a default or require it to be set in environment variables
     DATABASE_URL: str = Field(..., description="PostgreSQL Database URL from Render")
     
@@ -27,6 +28,11 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_and_fix_settings(self):
         """Ensure all settings are properly formatted for application use."""
+        # 0. Environment-specific overrides
+        env = (self.ENVIRONMENT or "").strip().lower()
+        if env in {"production", "prod"}:
+            self.BACKEND_CORS_ORIGINS = ["*"]
+
         # 1. Fix DATABASE_URL for SQLAlchemy 1.4+ compatibility (postgres:// -> postgresql://)
         # And ensure sslmode=require is used for Render DBs
         db_url = self.DATABASE_URL
