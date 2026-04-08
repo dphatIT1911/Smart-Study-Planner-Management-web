@@ -29,7 +29,7 @@ services:
   # ---------------------------------------------
   - type: web
     name: smart-study-frontend
-    env: static
+    runtime: static
     plan: free
     region: singapore
     rootDir: frontend
