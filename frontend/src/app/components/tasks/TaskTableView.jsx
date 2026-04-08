@@ -41,12 +41,12 @@ export default function TaskTableView({ tasks, onTaskClick, onStartTimer }) {
       <Table>
         <TableHeader className="bg-slate-50 border-b border-slate-200">
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-[300px] font-semibold text-slate-700">Công việc</TableHead>
+            <TableHead className="font-semibold text-slate-700 text-center">Công việc</TableHead>
             <TableHead className="font-semibold text-slate-700">Môn học</TableHead>
             <TableHead className="font-semibold text-slate-700">Thời hạn</TableHead>
             <TableHead className="font-semibold text-slate-700">Độ ưu tiên</TableHead>
             <TableHead className="font-semibold text-slate-700">Trạng thái</TableHead>
-            <TableHead className="text-right font-semibold text-slate-700">Hành động</TableHead>
+            <TableHead className="font-semibold text-slate-700 text-center">Hành động</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -58,7 +58,7 @@ export default function TaskTableView({ tasks, onTaskClick, onStartTimer }) {
             >
               <TableCell className="font-medium text-slate-900">
                 <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: task.subject?.color || '#cbd5e1' }} />
+                  <div className="w-1.5 h-1.5 rounded-full pl-2" style={{ backgroundColor: task.subject?.color || '#cbd5e1' }} />
                   {task.title}
                 </div>
               </TableCell>
@@ -83,7 +83,7 @@ export default function TaskTableView({ tasks, onTaskClick, onStartTimer }) {
                   {statusLabels[task.status] || task.status}
                 </Badge>
               </TableCell>
-              <TableCell className="text-right whitespace-nowrap">
+              <TableCell className="text-center whitespace-nowrap">
                 <Button 
                   variant="ghost" 
                   size="sm" 

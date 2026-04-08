@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import StatCard from './StatCard';
 import SubjectCard from './SubjectCard';
 import TaskList from './TaskList';
-import SessionTracker from './SessionTracker';
+import RecentSessionsCard from './RecentSessionsCard';
 import { Badge } from '../ui/badge';
 import { Clock, Target, CheckCircle2, TrendingUp, Loader2 } from 'lucide-react';
 import Mascot from '../mascot/Mascot';
@@ -20,7 +20,7 @@ export default function Dashboard() {
   });
   const [subjects, setSubjects] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [recentSession, setRecentSession] = useState(null);
+  const [recentSessions, setRecentSessions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const closeWelcome = () => {
@@ -73,16 +73,25 @@ export default function Dashboard() {
 
         setTasks(mappedTasks.slice(0, 5));
 
-        const topSession = Array.isArray(allSessions) ? allSessions[0] || null : null;
-        if (topSession) {
-          const parsedDate = safeParseDate(topSession.start_time);
-          setRecentSession({
-            ...topSession,
-            subject: topSession.task?.subject?.name || 'Phiên học nhanh',
-            subjectColor: topSession.task?.subject?.color || '#6366f1',
-            localDate: parsedDate ? parsedDate.toLocaleDateString('vi-VN') : 'Gần đây'
-          });
-        }
+        const mappedSessions = Array.isArray(allSessions) ? allSessions.map(session => {
+          const task = mappedTasks.find(t => t.id?.toString() === session.task_id?.toString());
+          const parsedStart = safeParseDate(session.start_time);
+          const parsedEnd = session.end_time ? safeParseDate(session.end_time) : null;
+          return { ...session, task, parsedStart, parsedEnd };
+        }) : [];
+
+        mappedSessions.sort((a, b) => (b.parsedEnd || b.parsedStart) - (a.parsedEnd || a.parsedStart));
+
+        const recent = mappedSessions.slice(0, 5).map(s => ({
+          id: s.id,
+          durationMinutes: s.duration_minutes || 0,
+          localDate: s.parsedStart ? s.parsedStart.toLocaleDateString('vi-VN') : 'Gần đây',
+          subject: s.task?.title || 'Phiên học nhanh',
+          subjectColor: s.task?.subject?.color || '#6366f1',
+          notes: s.notes
+        }));
+
+        setRecentSessions(recent);
         
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
@@ -96,11 +105,11 @@ export default function Dashboard() {
     // Determine Gen Z greeting based on time
     const hour = new Date().getHours();
     let currentGreeting = '';
-    if (hour < 5) currentGreeting = 'Cú đêm ơi, chạy deadline rực rỡ nhé! 🦉';
-    else if (hour < 11) currentGreeting = 'Sáng rồi đồng chí ơi, bật mode năng suất thuiii ⚡';
-    else if (hour < 14) currentGreeting = 'Trưa rồi nạp năng lượng rùi cày tiếp nha 🍔';
-    else if (hour < 18) currentGreeting = 'Trời chiều mát mẻ, dứt điểm deadline nào 🌅';
-    else currentGreeting = 'Lên đèn lên đồ... à nhầm lên bàn học thui! 🚀';
+    if (hour < 5) currentGreeting = 'Cú đêm ơi, chạy deadline rực rỡ nhé!';
+    else if (hour < 11) currentGreeting = 'Sáng rồi đồng chí ơi, bật mode năng suất thuiii';
+    else if (hour < 14) currentGreeting = 'Trưa rồi nạp năng lượng rùi cày tiếp nha';
+    else if (hour < 18) currentGreeting = 'Trời chiều mát mẻ, dứt điểm deadline nào';
+    else currentGreeting = 'Lên đèn lên đồ... à nhầm lên bàn học thui!';
     
     setGreeting(currentGreeting);
 
@@ -188,7 +197,7 @@ export default function Dashboard() {
             }}>
               {greeting}
               <br />
-              <span style={{ opacity: 0.75, fontSize: '1rem' }}>Chúc bạn học thật vui! 💪✨</span>
+              <span style={{ opacity: 0.75, fontSize: '1rem' }}>Chúc bạn học thật vui!</span>
             </p>
             <button
               onClick={closeWelcome}
@@ -207,7 +216,7 @@ export default function Dashboard() {
               onMouseEnter={(e) => { e.target.style.transform = 'scale(1.05)'; e.target.style.boxShadow = '0 6px 20px rgba(99, 102, 241, 0.5)'; }}
               onMouseLeave={(e) => { e.target.style.transform = 'scale(1)'; e.target.style.boxShadow = '0 4px 15px rgba(99, 102, 241, 0.4)'; }}
             >
-              Cày thôi nào! 🚀
+              Cày thôi nào!
             </button>
           </div>
         </div>
@@ -307,12 +316,12 @@ export default function Dashboard() {
       </div>
 
       {/* Tasks and Session */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-7">
           <TaskList tasks={tasks} />
         </div>
-        <div className="space-y-6">
-          <SessionTracker recentSession={recentSession} />
+        <div className="lg:col-span-5 space-y-6">
+          <RecentSessionsCard recentSessions={recentSessions} />
         </div>
       </div>
     </div>

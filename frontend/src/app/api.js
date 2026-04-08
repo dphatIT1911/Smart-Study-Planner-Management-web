@@ -126,6 +126,7 @@ export const api = {
 
   sessions: {
     getAll: () => api.get('sessions/'),
+    getRecent: (limit = 5) => api.get(`sessions/?skip=0&limit=${limit}`),
     create: (data) => api.post('sessions/', data),
   },
 
