@@ -40,14 +40,14 @@ export default function LoginPage() {
       console.error('Login error:', err);
       if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('fetch')) {
         const isProd = config.IS_PROD;
-        const apiUrl = config.VITE_API_URL;
+        const apiUrl = config.API_BASE_URL;
         if (isProd && !apiUrl) {
           setError('Lỗi cấu hình: VITE_API_URL chưa được thiết lập.')
         } else {
           setError('Không thể kết nối đến máy chủ API.');
         }
       } else if (err.message.includes('404')) {
-        setError('Không tìm thấy API (404). Vui lòng kiểm tra cấu hình VITE_API_URL trên Render.');
+        setError('Không tìm thấy API (404).');
       } else {
         setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
       }
