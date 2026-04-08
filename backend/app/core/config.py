@@ -31,7 +31,7 @@ class Settings(BaseSettings):
         # 0. Environment-specific overrides
         env = (self.ENVIRONMENT or "").strip().lower()
         if env in {"production", "prod"}:
-            self.BACKEND_CORS_ORIGINS = ["https://study-planner-deploy-beryl.vercel.app"]
+            self.BACKEND_CORS_ORIGINS = ["https://study-planner-deploy-psi.vercel.app"]
 
         # 1. Fix DATABASE_URL for SQLAlchemy 1.4+ compatibility (postgres:// -> postgresql://)
         # And ensure sslmode=require is used for Render DBs
