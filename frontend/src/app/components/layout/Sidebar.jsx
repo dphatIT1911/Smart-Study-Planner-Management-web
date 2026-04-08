@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router';
-import { LayoutDashboard, BookOpen, CheckSquare, Clock, Settings, LogOut, Target } from 'lucide-react';
+import { LayoutDashboard, BookOpen, CheckSquare, Clock, Settings, LogOut, Target, CalendarDays } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 
@@ -15,6 +15,7 @@ const menuItems = [
   { path: '/', label: 'Bảng điều khiển', icon: LayoutDashboard },
   { path: '/subjects', label: 'Môn học của tôi', icon: BookOpen },
   { path: '/tasks', label: 'Danh sách công việc', icon: CheckSquare },
+  { path: '/calendar', label: 'Lịch biểu', icon: CalendarDays },
   { path: '/focus', label: 'Không gian tập trung', icon: Target },
   { path: '/sessions', label: 'Lịch sử phiên học', icon: Clock },
   { path: '/settings', label: 'Cài đặt', icon: Settings }

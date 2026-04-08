@@ -8,6 +8,7 @@ import TaskListPage from "./pages/TaskListPage";
 import StudySessions from "./pages/StudySessions";
 import Settings from "./pages/Settings";
 import FocusSpace from "./pages/FocusSpace";
+import CalendarPage from "./pages/CalendarPage";
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { index: true, Component: Dashboard },
       { path: "subjects", Component: MySubjects },
       { path: "tasks", Component: TaskListPage },
+      { path: "calendar", Component: CalendarPage },
       { path: "sessions", Component: StudySessions },
       { path: "focus", Component: FocusSpace },
       { path: "settings", Component: Settings }]

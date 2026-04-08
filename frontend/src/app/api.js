@@ -119,6 +119,7 @@ export const api = {
 
   tasks: {
     getAll: () => api.get('tasks/'),
+    getCalendar: (startDate, endDate) => api.get(`tasks/calendar?start_date=${startDate}&end_date=${endDate}`),
     create: (data) => api.post('tasks/', data),
     update: (id, data) => api.patch(`tasks/${id}`, data),
     delete: (id) => api.delete(`tasks/${id}`),
