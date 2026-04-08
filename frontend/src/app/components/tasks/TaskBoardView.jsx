@@ -32,12 +32,12 @@ export default function TaskBoardView({ tasks, onTaskClick, onStartTimer }) {
   const getTasksByStatus = (statusId) => tasks.filter(task => task.status === statusId);
 
   return (
-    <div className="flex gap-6 overflow-x-auto pb-4 h-full min-h-[500px]">
+    <div className="flex gap-6 overflow-x-auto h-full min-h-0 pb-2">
       {columns.map(col => {
         const columnTasks = getTasksByStatus(col.id);
         
         return (
-          <div key={col.id} className="flex-1 min-w-[320px] max-w-sm bg-slate-50 rounded-xl p-4 flex flex-col gap-4 border border-slate-100">
+          <div key={col.id} className="flex-1 min-w-[320px] max-w-sm bg-slate-50 rounded-xl p-4 flex flex-col gap-3 border border-slate-100 h-full min-h-0">
             {/* Column Header */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -51,11 +51,11 @@ export default function TaskBoardView({ tasks, onTaskClick, onStartTimer }) {
             </div>
 
             {/* Droppable Area / Task List */}
-            <div className="flex-1 flex flex-col gap-3 min-h-[150px]">
+            <div className="flex-1 flex flex-col gap-3 min-h-[150px] overflow-y-auto overflow-x-hidden pr-2 pb-2 scrollbar-thin">
               {columnTasks.map(task => (
                 <Card 
                   key={task.id} 
-                  className="cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all active:scale-[0.98] border-slate-200"
+                  className="cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all active:scale-[0.98] border-slate-200 shrink-0"
                   onClick={() => onTaskClick(task)}
                 >
                   <CardContent className="p-4 space-y-3 relative overflow-hidden">
