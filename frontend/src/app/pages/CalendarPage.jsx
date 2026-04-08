@@ -3,6 +3,7 @@ import { format, addMonths, subMonths, startOfWeek, endOfWeek,
          startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router';
 import { api } from '../api';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
@@ -16,6 +17,7 @@ export default function CalendarPage() {
   const [subjects, setSubjects] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.subjects.getAll().then(setSubjects).catch(console.error);
@@ -28,14 +30,22 @@ export default function CalendarPage() {
   const fetchCalendarTasks = async () => {
     setLoading(true);
     try {
-      // Calculate start and end dates of the view (including trailing/leading days from other months)
-      const monthStart = startOfMonth(currentDate);
-      const monthEnd = endOfMonth(monthStart);
-      const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday start
-      const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
-
-      const data = await api.tasks.getCalendar(startDate.toISOString(), endDate.toISOString());
-      setTasks(data || []);
+      // Lấy toàn bộ task và môn học rồi tự map ở Frontend
+      const [tasksData, subjectsData] = await Promise.all([
+        api.tasks.getAll(),
+        api.subjects.getAll()
+      ]);
+      
+      const mappedTasks = tasksData.map(task => {
+        const subject = subjectsData.find(s => s.id === task.subject_id);
+        return {
+          ...task,
+          subject_name: subject ? subject.name : null,
+          subject_color: subject ? subject.color : null,
+        };
+      });
+      
+      setTasks(mappedTasks || []);
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu lịch:", error);
     } finally {
@@ -170,8 +180,7 @@ export default function CalendarPage() {
                         key={task.id}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedTask(task);
-                          setIsModalOpen(true);
+                          navigate(`/tasks?taskId=${task.id}`);
                         }}
                         className={`flex items-start gap-1.5 px-1 py-1 rounded hover:bg-gray-100/80 transition-colors cursor-pointer text-xs ${isDone ? 'opacity-50' : ''}`}
                       >
@@ -193,10 +202,11 @@ export default function CalendarPage() {
                             {task.title}
                           </span>
                           
-                          <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-0.5">
-                            <span>{format(parseISO(task.due_date), 'HH:mm')}</span>
-                            {isOverdue && <span className="text-red-500 font-medium ml-1">Quá hạn</span>}
-                          </div>
+                          {isOverdue && (
+                            <div className="flex items-center text-[10px] text-gray-400 mt-0.5">
+                              <span className="text-red-500 font-medium">Quá hạn</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )})}
