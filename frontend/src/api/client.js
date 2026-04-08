@@ -1,7 +1,7 @@
+import config from '../config';
+
 // URL gốc của API phụ thuộc vào môi trường
-const API_BASE_URL = import.meta.env.DEV 
-  ? 'http://localhost:8000' 
-  : import.meta.env.VITE_API_URL;
+const API_BASE_URL = config.API_BASE_URL;
 
 /**
  * Trình gửi Yêu cầu HTTP cơ bản đến Backend
