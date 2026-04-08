@@ -6,11 +6,20 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, AlertCircle
 import { api } from '../api';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import TaskDetailModal from '../components/tasks/TaskDetailModal';
+import { toast } from 'sonner';
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [subjects, setSubjects] = useState([]);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    api.subjects.getAll().then(setSubjects).catch(console.error);
+  }, []);
 
   useEffect(() => {
     fetchCalendarTasks();
@@ -31,6 +40,20 @@ export default function CalendarPage() {
       console.error("Lỗi khi lấy dữ liệu lịch:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveTask = async (taskData) => {
+    try {
+      if (taskData.id) {
+        await api.tasks.update(taskData.id, taskData);
+      } else {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        await api.tasks.create({...taskData, user_id: user?.id});
+      }
+      fetchCalendarTasks();
+    } catch (err) {
+      toast.error('Lỗi khi lưu', { description: err.message || 'Không thể lưu công việc do lỗi kết nối' });
     }
   };
 
@@ -98,7 +121,7 @@ export default function CalendarPage() {
               return (
                 <div 
                   key={day.toString()} 
-                  className={`min-h-[140px] p-2 border-r border-b border-gray-100 transition-colors
+                  className={`group relative min-h-[140px] p-2 border-r border-b border-gray-100 transition-colors
                     ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white text-gray-900'}
                     ${dayIdx % 7 === 6 ? 'border-r-0' : ''}
                     hover:bg-indigo-50/30 cursor-pointer
@@ -111,39 +134,72 @@ export default function CalendarPage() {
                     `}>
                       {format(day, 'd')}
                     </span>
-                    {dateTasks.length > 0 && (
-                      <span className="text-xs font-medium text-gray-400">
-                        {dateTasks.length} mục
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      <button 
+                        onClick={() => {
+                          setSelectedTask({
+                            title: '',
+                            description: '',
+                            status: 'TODO',
+                            priority: 'MED',
+                            due_date: new Date(day.getTime() - day.getTimezoneOffset() * 60000).toISOString(),
+                            estimated_minutes: 25,
+                          });
+                          setIsModalOpen(true);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white pb-0.5"
+                        title="Thêm công việc"
+                      >
+                        <span className="text-sm font-bold leading-none">+</span>
+                      </button>
+                      {dateTasks.length > 0 && (
+                        <span className="text-xs font-medium text-gray-400">
+                          {dateTasks.length} mục
+                        </span>
+                      )}
+                    </div>
                   </div>
                   
-                  <div className="space-y-1.5 overflow-y-auto max-h-[100px] scrollbar-thin">
-                    {dateTasks.map(task => (
+                  <div className="space-y-1 overflow-y-auto max-h-[100px] scrollbar-thin">
+                    {dateTasks.map(task => {
+                      const isDone = task.status === 'DONE';
+                      const isOverdue = task.is_overdue && !isDone;
+                      
+                      return (
                       <div 
                         key={task.id}
-                        className="group flex flex-col p-1.5 rounded-md text-xs font-medium border hover:shadow-md transition-all bg-white"
-                        style={{ 
-                          borderColor: task.subject_color ? `${task.subject_color}40` : '#e2e8f0',
-                          borderLeftWidth: '4px',
-                          borderLeftColor: task.subject_color || '#94a3b8',
-                          color: task.is_overdue && task.status !== 'DONE' ? '#ef4444' : '#334155'
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedTask(task);
+                          setIsModalOpen(true);
                         }}
+                        className={`flex items-start gap-1.5 px-1 py-1 rounded hover:bg-gray-100/80 transition-colors cursor-pointer text-xs ${isDone ? 'opacity-50' : ''}`}
                       >
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="truncate pr-1 block flex-1 font-semibold">
+                        <div 
+                          className="w-2 h-2 rounded-full mt-1 shrink-0"
+                          style={{ 
+                            backgroundColor: isDone ? (task.subject_color || '#94a3b8') : 'transparent', 
+                            borderColor: task.subject_color || '#94a3b8', 
+                            borderStyle: 'solid',
+                            borderWidth: isDone ? '0px' : '2px' 
+                          }}
+                        />
+                        
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <span 
+                            className={`truncate font-medium ${isDone ? 'line-through text-gray-500' : isOverdue ? 'text-red-600' : 'text-gray-700'}`}
+                            title={task.title}
+                          >
                             {task.title}
                           </span>
-                          {task.status === 'DONE' && <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />}
-                          {task.is_overdue && task.status !== 'DONE' && <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />}
-                        </div>
-                        
-                        <div className="flex items-center gap-1 opacity-70 text-[10px]">
-                          <Clock className="w-3 h-3" />
-                          <span>{format(parseISO(task.due_date), 'HH:mm')}</span>
+                          
+                          <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-0.5">
+                            <span>{format(parseISO(task.due_date), 'HH:mm')}</span>
+                            {isOverdue && <span className="text-red-500 font-medium ml-1">Quá hạn</span>}
+                          </div>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
               );
@@ -151,6 +207,14 @@ export default function CalendarPage() {
           </div>
         </CardContent>
       </Card>
+      
+      <TaskDetailModal 
+        task={selectedTask} 
+        subjects={subjects}
+        isOpen={isModalOpen} 
+        onOpenChange={setIsModalOpen} 
+        onSave={handleSaveTask}
+      />
     </div>
   );
 }
