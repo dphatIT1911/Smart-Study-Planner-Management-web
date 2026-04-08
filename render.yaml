@@ -1,0 +1,45 @@
+services:
+  # ---------------------------------------------
+  # 1. BACKEND SERVICE (Docker FastAPI)
+  # ---------------------------------------------
+  - type: web
+    name: smart-study-backend
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: backend
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "10080"
+      - key: PORT
+        value: "8000"
+      - key: BACKEND_CORS_ORIGINS
+        value: "https://smart-study-frontend-x0b0.onrender.com,https://smart-study-planner-management-web.onrender.com,http://localhost:5173"
+
+  # ---------------------------------------------
+  # 2. FRONTEND SERVICE (Vite Static Site)
+  # ---------------------------------------------
+  - type: web
+    name: smart-study-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # IMPORTANT: After first deploy, set VITE_API_URL manually in Render Dashboard
+      # to the backend's External URL (e.g. https://smart-study-backend.onrender.com)
+      # Docker services do NOT expose RENDER_EXTERNAL_URL automatically.
+      - key: VITE_API_URL
+        sync: false
+
