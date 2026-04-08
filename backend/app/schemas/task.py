@@ -43,3 +43,15 @@ class TaskResponse(TaskBase):
     is_overdue: bool
     
     model_config = ConfigDict(from_attributes=True)
+
+class TaskCalendarResponse(BaseModel):
+    id: int
+    title: str
+    due_date: Optional[datetime] = None
+    status: TaskStatus
+    priority: TaskPriority
+    subject_name: Optional[str] = None
+    subject_color: Optional[str] = None
+    is_overdue: bool
+    
+    model_config = ConfigDict(from_attributes=True)
