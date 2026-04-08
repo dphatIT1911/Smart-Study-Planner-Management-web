@@ -22,27 +22,4 @@ services:
       - key: PORT
         value: "8000"
       - key: BACKEND_CORS_ORIGINS
-        value: "https://smart-study-planner-management-web.onrender.com,http://localhost:5173"
-
-  # ---------------------------------------------
-  # 2. FRONTEND SERVICE (Vite Static Site)
-  # ---------------------------------------------
-  - type: web
-    name: smart-study-frontend
-    env: static
-    plan: free
-    region: singapore
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      # IMPORTANT: After first deploy, set VITE_API_URL manually in Render Dashboard
-      # to the backend's External URL (e.g. https://smart-study-backend.onrender.com)
-      # Docker services do NOT expose RENDER_EXTERNAL_URL automatically.
-      - key: VITE_API_URL
-        sync: false
-
+        value: "http://localhost:5173"
