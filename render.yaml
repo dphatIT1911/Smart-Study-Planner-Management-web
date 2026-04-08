@@ -8,7 +8,6 @@ services:
     plan: free
     region: singapore
     rootDir: backend
-    preDeployCommand: alembic upgrade head
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
@@ -31,7 +30,6 @@ services:
     name: smart-study-frontend
     runtime: static
     plan: free
-    region: singapore
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
