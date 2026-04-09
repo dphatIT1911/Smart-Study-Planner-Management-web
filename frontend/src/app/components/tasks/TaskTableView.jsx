@@ -27,7 +27,7 @@ const statusColors = {
   'DONE': 'bg-green-100 text-green-700 border-green-200'
 };
 
-export default function TaskTableView({ tasks, onTaskClick, onStartTimer }) {
+export default function TaskTableView({ tasks, onTaskClick, onStartTimer, onTaskStatusChange }) {
   if (tasks.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-dashed border-slate-200">
@@ -99,7 +99,9 @@ export default function TaskTableView({ tasks, onTaskClick, onStartTimer }) {
                   className="opacity-0 group-hover:opacity-100 transition-opacity gap-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
                   onClick={(e) => { 
                     e.stopPropagation(); 
-                    // Mark complete logic placeholder
+                    if (onTaskStatusChange) {
+                      onTaskStatusChange(task.id, 'DONE');
+                    }
                   }}
                 >
                   <CheckCircle2 className="w-4 h-4" />
