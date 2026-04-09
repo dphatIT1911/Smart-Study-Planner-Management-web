@@ -5,9 +5,11 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Separator } from '../components/ui/separator';
+import { api } from '../api';
 
 const timezones = [
 'UTC',
+'Asia/Ho_Chi_Minh',
 'America/New_York',
 'America/Chicago',
 'America/Denver',
@@ -30,22 +32,12 @@ export default function Settings() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
       try {
-        const response = await fetch('http://localhost:8000/auth/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (response.ok) {
-          const user = await response.json();
-          setName(user.name || '');
-          setEmail(user.email || '');
-          setTimezone(user.timezone || 'UTC');
-          localStorage.setItem('user', JSON.stringify(user));
-        }
+        const user = await api.getProfile();
+        setName(user.name || '');
+        setEmail(user.email || '');
+        setTimezone(user.timezone || 'UTC');
+        localStorage.setItem('user', JSON.stringify(user));
       } catch (err) {
         console.error('Failed to load profile', err);
       }
@@ -67,23 +59,8 @@ export default function Settings() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/auth/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ name, timezone })
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.detail || 'Failed to save settings');
-      }
-
-      const updatedUser = await response.json();
-      localStorage.setItem('user', JSON.stringify(updatedUser)); // update local storage with new info
-
+      const updatedUser = await api.patch('auth/profile', { name, timezone });
+      localStorage.setItem('user', JSON.stringify(updatedUser));
       setSuccessMsg('Settings saved successfully!');
     } catch (err) {
       setError(err.message || 'An error occurred');

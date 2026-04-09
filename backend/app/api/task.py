@@ -39,8 +39,15 @@ def get_calendar(
     """
     Get tasks for calendar view.
     """
+    # Use user's saved timezone or default to UTC
+    user_tz = current_user.timezone or "UTC"
+    
     tasks = task_service.get_tasks_for_calendar(
-        db=db, user_id=current_user.id, start_date=start_date, end_date=end_date
+        db=db, 
+        user_id=current_user.id, 
+        start_date=start_date, 
+        end_date=end_date,
+        user_timezone=user_tz
     )
     
     responses = []
