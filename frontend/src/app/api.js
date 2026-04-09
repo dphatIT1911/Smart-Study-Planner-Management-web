@@ -1,13 +1,11 @@
+import config from '../config';
 // BASE should be the backend API URL. In production, we get it from environment.
 // In development, we use '/api' to trigger Vite's proxy.
 // ⚠️ IMPORTANT: In production (Render static site), VITE_API_URL MUST be set to the backend URL
 // e.g. https://smart-study-backend.onrender.com
 // If not set, the app will try to call '/api' which won't work on a static site!
-const _rawApiUrl = import.meta.env.VITE_API_URL;
-if (!_rawApiUrl && import.meta.env.PROD) {
-  console.error('[API CONFIG ERROR] VITE_API_URL is not set! Please configure it in your Render environment variables for the frontend service. Set it to your backend URL, e.g. https://smart-study-backend.onrender.com');
-}
-const BASE = (_rawApiUrl || '/api').replace(/\/+$/, '');
+
+const BASE = config.API_BASE_URL;
 
 export const api = {
   // Helper to handle response and catch non-JSON errors (like 500)
@@ -119,6 +117,7 @@ export const api = {
 
   tasks: {
     getAll: () => api.get('tasks/'),
+    getCalendar: (startDate, endDate) => api.get(`tasks/calendar?start_date=${startDate}&end_date=${endDate}`),
     create: (data) => api.post('tasks/', data),
     update: (id, data) => api.patch(`tasks/${id}`, data),
     delete: (id) => api.delete(`tasks/${id}`),
@@ -127,6 +126,7 @@ export const api = {
 
   sessions: {
     getAll: () => api.get('sessions/'),
+    getRecent: (limit = 5) => api.get(`sessions/?skip=0&limit=${limit}`),
     create: (data) => api.post('sessions/', data),
   },
 

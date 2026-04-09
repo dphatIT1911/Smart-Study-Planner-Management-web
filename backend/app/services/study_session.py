@@ -11,6 +11,7 @@ class CRUDStudySession(CRUDBase[StudySession, StudySessionCreate, StudySessionCr
         return db.query(StudySession)\
             .join(Task)\
             .filter(Task.user_id == user_id)\
+            .order_by(StudySession.end_time.desc())\
             .offset(skip)\
             .limit(limit)\
             .all()

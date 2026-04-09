@@ -3,6 +3,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
 import { Plus, BookOpen, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router';
 import { api } from '../api';
 import {
   Dialog,
@@ -22,6 +23,7 @@ export default function MySubjects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -326,7 +328,7 @@ export default function MySubjects() {
 
       {/* Details Modal */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent hideClose={true} className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
               <div 
@@ -395,6 +397,7 @@ export default function MySubjects() {
             <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>Đóng</Button>
             <Button className="bg-indigo-600" onClick={() => {
               setIsDetailsOpen(false);
+              navigate('/tasks');
             }}>
               Đi tới danh sách Task
             </Button>

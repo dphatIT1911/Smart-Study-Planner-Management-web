@@ -80,7 +80,7 @@ export default function TaskDetailModal({ task, subjects = [], isOpen, onOpenCha
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] h-[90vh] overflow-y-auto">
+      <DialogContent hideClose className="sm:max-w-[700px] h-[90vh] overflow-y-auto">
         <DialogHeader className="pr-10 pt-2">
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <CheckSquare className="w-6 h-6 shrink-0 text-indigo-600" />
