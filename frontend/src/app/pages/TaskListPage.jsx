@@ -187,7 +187,7 @@ export default function TaskListPage() {
         {viewMode === 'board' ? (
           <TaskBoardView tasks={filteredTasks} onTaskClick={handleTaskClick} onStartTimer={handleStartTimer} onTaskDrop={handleTaskStatusChange} />
         ) : (
-          <TaskTableView tasks={filteredTasks} onTaskClick={handleTaskClick} onStartTimer={handleStartTimer} />
+          <TaskTableView tasks={filteredTasks} onTaskClick={handleTaskClick} onStartTimer={handleStartTimer} onTaskStatusChange={handleTaskStatusChange} />
         )}
       </div>
 
