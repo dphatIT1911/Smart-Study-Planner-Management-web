@@ -27,9 +27,36 @@ const columns = [
   { id: 'DONE', title: 'Hoàn thành', color: 'bg-green-100 text-green-700' }
 ];
 
-export default function TaskBoardView({ tasks, onTaskClick, onStartTimer }) {
+export default function TaskBoardView({ tasks, onTaskClick, onStartTimer, onTaskDrop }) {
   // Simple grouping
   const getTasksByStatus = (statusId) => tasks.filter(task => task.status === statusId);
+
+  const handleDragStart = (e, taskId) => {
+    e.dataTransfer.setData('taskId', taskId);
+    setTimeout(() => { e.target.style.opacity = '0.5'; }, 0);
+  };
+
+  const handleDragEnd = (e) => {
+    e.target.style.opacity = '1';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('bg-slate-100/50');
+  };
+
+  const handleDragLeave = (e) => {
+    e.currentTarget.classList.remove('bg-slate-100/50');
+  };
+
+  const handleDrop = (e, statusId) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('bg-slate-100/50');
+    const taskId = e.dataTransfer.getData('taskId');
+    if (taskId && onTaskDrop) {
+      onTaskDrop(parseInt(taskId), statusId);
+    }
+  };
 
   return (
     <div className="flex gap-6 overflow-x-auto h-full min-h-0 pb-2">
@@ -51,10 +78,18 @@ export default function TaskBoardView({ tasks, onTaskClick, onStartTimer }) {
             </div>
 
             {/* Droppable Area / Task List */}
-            <div className="flex-1 flex flex-col gap-3 min-h-[150px] overflow-y-auto overflow-x-hidden pr-2 pb-2 scrollbar-thin">
+            <div 
+              className="flex-1 flex flex-col gap-3 min-h-[150px] overflow-y-auto overflow-x-hidden pr-2 pb-2 scrollbar-thin transition-colors"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, col.id)}
+            >
               {columnTasks.map(task => (
                 <Card 
                   key={task.id} 
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, task.id)}
+                  onDragEnd={handleDragEnd}
                   className="cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all active:scale-[0.98] border-slate-200 shrink-0"
                   onClick={() => onTaskClick(task)}
                 >

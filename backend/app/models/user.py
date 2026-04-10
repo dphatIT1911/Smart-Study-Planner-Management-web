@@ -14,7 +14,7 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String)
     name: Mapped[str] = mapped_column(String)
     timezone: Mapped[Optional[str]] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     subjects: Mapped[List["Subject"]] = relationship(

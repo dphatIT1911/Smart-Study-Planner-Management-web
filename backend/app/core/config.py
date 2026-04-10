@@ -23,16 +23,11 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = Field("http://localhost:5173", description="Frontend application URL")
 
     # CORS Settings - accepts comma-separated string or JSON array from env var
-    BACKEND_CORS_ORIGINS: Union[str, list[str]] = "*"
+    BACKEND_CORS_ORIGINS: Union[str, list[str]] = "http://localhost:8000"
     
     @model_validator(mode="after")
     def validate_and_fix_settings(self):
         """Ensure all settings are properly formatted for application use."""
-        # 0. Environment-specific overrides
-        env = (self.ENVIRONMENT or "").strip().lower()
-        if env in {"production", "prod"}:
-            self.BACKEND_CORS_ORIGINS = ["*"]
-
         # 1. Fix DATABASE_URL for SQLAlchemy 1.4+ compatibility (postgres:// -> postgresql://)
         # And ensure sslmode=require is used for Render DBs
         db_url = self.DATABASE_URL

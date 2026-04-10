@@ -92,6 +92,19 @@ export default function TaskListPage() {
     }
   };
 
+  const handleTaskStatusChange = async (taskId, newStatus) => {
+    try {
+      // Optimistic build
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+      await api.tasks.update(taskId, { status: newStatus });
+    } catch (err) {
+      toast.error('Lỗi khi cập nhật trạng thái', { description: err.message });
+      // Revert if error
+      const originalTasks = await api.tasks.getAll();
+      setTasks(originalTasks);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 gap-4">
@@ -172,9 +185,9 @@ export default function TaskListPage() {
 
       <div className="flex-1 overflow-hidden min-h-0">
         {viewMode === 'board' ? (
-          <TaskBoardView tasks={filteredTasks} onTaskClick={handleTaskClick} onStartTimer={handleStartTimer} />
+          <TaskBoardView tasks={filteredTasks} onTaskClick={handleTaskClick} onStartTimer={handleStartTimer} onTaskDrop={handleTaskStatusChange} />
         ) : (
-          <TaskTableView tasks={filteredTasks} onTaskClick={handleTaskClick} onStartTimer={handleStartTimer} />
+          <TaskTableView tasks={filteredTasks} onTaskClick={handleTaskClick} onStartTimer={handleStartTimer} onTaskStatusChange={handleTaskStatusChange} />
         )}
       </div>
 
