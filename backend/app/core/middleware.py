@@ -16,7 +16,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         # Allow pre-flight requests and excluded paths
-        path = request.url.path
+        # Sanitize path to handle potential double slashes like //auth/login
+        path = request.url.path.replace("//", "/")
         
         # Check if the path is in the exclude list (exact or with/without trailing slash)
         # or if it's an auth endpoint (often we want to allow all login/register)

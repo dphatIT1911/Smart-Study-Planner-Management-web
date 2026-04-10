@@ -5,7 +5,9 @@ import config from '../config';
 // e.g. https://smart-study-backend.onrender.com
 // If not set, the app will try to call '/api' which won't work on a static site!
 
-const BASE = config.API_BASE_URL;
+const BASE = config.API_BASE_URL?.endsWith('/') 
+  ? config.API_BASE_URL.slice(0, -1) 
+  : config.API_BASE_URL;
 
 export const api = {
   // Helper to handle response and catch non-JSON errors (like 500)
