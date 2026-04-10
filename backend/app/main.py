@@ -72,7 +72,7 @@ app = create_app()
 def read_root():
     return {"message": "Welcome to Smart Study Planner API"}
 
-@app.get("/health", tags=["System"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["System"])
 def health_check():
     """Basic health check endpoint."""
     return {"status": "ok", "app": settings.PROJECT_NAME}
