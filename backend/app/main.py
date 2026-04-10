@@ -30,11 +30,12 @@ def create_app() -> FastAPI:
     # CORSMiddleware is added last to wrap all inner middlewares (Auth, etc.)
     origins = [str(o).rstrip("/") for o in settings.BACKEND_CORS_ORIGINS]
     
+    # Add a fallback for common Vercel preview URLs if needed, or simply ensure robust matching
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origins,
+        allow_origins=origins + ["*"] if settings.ENVIRONMENT != "production" else origins,
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
         allow_headers=["*"],
     )
 
