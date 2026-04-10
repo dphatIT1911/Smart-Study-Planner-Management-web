@@ -41,6 +41,7 @@ export const api = {
         email: userData.email,
         name: userData.name,
         password: userData.password,
+        confirm_password: userData.confirm_password,
         timezone: userData.timezone || 'UTC'
       }),
     });
@@ -49,6 +50,14 @@ export const api = {
 
   async getProfile() {
     return this.get(`auth/profile`);
+  },
+
+  async forgotPassword(email) {
+    return this.post('auth/forgot-password', { email });
+  },
+
+  async resetPassword(token, newPassword) {
+    return this.post('auth/reset-password', { token, new_password: newPassword });
   },
 
   // Base methods
@@ -131,8 +140,6 @@ export const api = {
   },
 
   analytics: {
-    // Backend has /analytics/summary but dashboard needs specific overview
-    // We'll calculate mock stats on frontend from the resource lists for now
     getSummary: (userId) => api.get(`analytics/summary?user_id=${userId}&group_by=week`),
   }
 };

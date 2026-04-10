@@ -18,6 +18,7 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [timezone, setTimezone] = useState('Asia/Ho_Chi_Minh');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,14 +29,19 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      if (!name || !email || !password) {
+      if (!name || !email || !password || !confirmPassword) {
         throw new Error('Vui lòng điền đầy đủ các thông tin');
+      }
+
+      if (password !== confirmPassword) {
+        throw new Error('Mật khẩu nhập lại không khớp');
       }
 
       await api.register({
         name,
         email,
         password,
+        confirm_password: confirmPassword,
         timezone
       });
 
@@ -76,7 +82,6 @@ export default function SignupPage() {
                 disabled={loading}
                 required
                 minLength={3} />
-              
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -88,20 +93,32 @@ export default function SignupPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
                 required />
-              
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Tối thiểu 8 ký tự"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                required
-                minLength={8} />
-              
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Mật khẩu</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Tối thiểu 8 ký tự"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  minLength={8} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Nhập lại mật khẩu</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Xác nhận mật khẩu"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  minLength={8} />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="timezone">Múi giờ</Label>
@@ -122,10 +139,15 @@ export default function SignupPage() {
           <CardFooter className="flex flex-col space-y-4">
             <Button 
               type="submit" 
-              className="w-full bg-indigo-600 hover:bg-indigo-700 h-11"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 transition-all"
               disabled={loading}
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Tạo tài khoản'}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : 'Tạo tài khoản'}
             </Button>
             <p className="text-sm text-center text-gray-600">
               Đã có tài khoản?{' '}
@@ -136,6 +158,6 @@ export default function SignupPage() {
           </CardFooter>
         </form>
       </Card>
-    </div>);
-
-}
+    </div>
+  );
+}
