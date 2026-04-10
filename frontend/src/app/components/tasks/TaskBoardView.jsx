@@ -27,7 +27,7 @@ const columns = [
   { id: 'DONE', title: 'Hoàn thành', color: 'bg-green-100 text-green-700' }
 ];
 
-export default function TaskBoardView({ tasks, onTaskClick, onStartTimer, onTaskDrop }) {
+export default function TaskBoardView({ tasks, onTaskClick, onStartTimer, onTaskDrop, deleteMode = false, onDeleteTask }) {
   // Simple grouping
   const getTasksByStatus = (statusId) => tasks.filter(task => task.status === statusId);
 
@@ -90,9 +90,19 @@ export default function TaskBoardView({ tasks, onTaskClick, onStartTimer, onTask
                   draggable
                   onDragStart={(e) => handleDragStart(e, task.id)}
                   onDragEnd={handleDragEnd}
-                  className="cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all active:scale-[0.98] border-slate-200 shrink-0"
+                  className="relative overflow-visible cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all active:scale-[0.98] border-slate-200 shrink-0"
                   onClick={() => onTaskClick(task)}
                 >
+                  {deleteMode && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDeleteTask && onDeleteTask(task.id); }}
+                      className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white text-red-600 flex items-center justify-center hover:bg-red-50 border border-red-100 z-20 shadow"
+                      title="Xóa"
+                      aria-label="Xóa công việc"
+                    >
+                      ×
+                    </button>
+                  )}
                   <CardContent className="p-4 space-y-3 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: task.subject?.color || '#6366f1' }} />
                     <div className="pl-2">
