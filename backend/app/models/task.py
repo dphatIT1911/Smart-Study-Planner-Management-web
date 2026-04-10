@@ -33,7 +33,7 @@ class Task(Base):
     status: Mapped[TaskStatus] = mapped_column(Enum(TaskStatus), default=TaskStatus.TODO)
     priority: Mapped[TaskPriority] = mapped_column(Enum(TaskPriority), default=TaskPriority.MED)
     
-    due_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    due_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     estimated_minutes: Mapped[int] = mapped_column(Integer, default=0)
     actual_minutes: Mapped[int] = mapped_column(Integer, default=0)
     reminder_sent: Mapped[bool] = mapped_column(default=False)

@@ -39,15 +39,20 @@ export default function CalendarPage() {
   const fetchCalendarTasks = async () => {
     setLoading(true);
     try {
-      // Lấy toàn bộ task và môn học rồi tự map ở Frontend
+      // Gửi range theo UTC để backend so sánh đúng với due_date lưu dạng naive UTC
       const monthStart = startOfMonth(currentDate);
       const monthEnd = endOfMonth(monthStart);
       const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
       const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
+      // Set endDate về cuối ngày để không bỏ sót task cuối ngày cuối tuần
+      const endOfDay = new Date(endDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Dùng toISOString() để luôn gửi UTC, đồng bộ với cách due_date được lưu
       const tasksData = await api.tasks.getCalendar(
-        format(startDate, "yyyy-MM-dd'T'HH:mm:ss"),
-        format(endDate, "yyyy-MM-dd'T'HH:mm:ss")
+        startDate.toISOString(),
+        endOfDay.toISOString()
       );
 
       setTasks(tasksData || []);
@@ -151,7 +156,6 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Lịch biểu</h1>
           <p className="text-gray-500 mt-1">Quản lý thời gian và các mốc hoàn thành công việc</p>
         </div>
         <div className="flex items-center gap-4 bg-white p-2 rounded-xl shadow-sm border border-gray-100">

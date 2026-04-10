@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.security import get_password_hash, verify_password, create_access_token
 from app.api.deps import get_db, get_current_user
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserUpdate, UserResponse
 from app.schemas.auth import Token
 
 router = APIRouter()
@@ -51,3 +51,25 @@ def read_user_profile(
 def logout(current_user: User = Depends(get_current_user)) -> Any:
     # Since JWT is stateless, the frontend is responsible for discarding the token
     return {"message": "Successfully logged out. Please remove token from local storage."}
+
+@router.patch("/profile", response_model=UserResponse)
+def update_user_profile(
+    *,
+    db: Session = Depends(get_db),
+    user_in: UserUpdate,
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Update current user's profile (name, timezone, password).
+    """
+    if user_in.name is not None:
+        current_user.name = user_in.name
+    if user_in.timezone is not None:
+        current_user.timezone = user_in.timezone
+    if user_in.password is not None:
+        from app.core.security import get_password_hash
+        current_user.password_hash = get_password_hash(user_in.password)
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
