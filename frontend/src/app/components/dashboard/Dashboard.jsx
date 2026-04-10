@@ -4,14 +4,16 @@ import SubjectCard from './SubjectCard';
 import TaskList from './TaskList';
 import RecentSessionsCard from './RecentSessionsCard';
 import { Badge } from '../ui/badge';
-import { Clock, Target, CheckCircle2, TrendingUp, Loader2 } from 'lucide-react';
+import { Clock, Target, CheckCircle2, TrendingUp, Loader2, Flame, AlertCircle } from 'lucide-react';
 import Mascot from '../mascot/Mascot';
 import { api } from '../../api';
 
 export default function Dashboard() {
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || {});
   const [greeting, setGreeting] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeClosing, setWelcomeClosing] = useState(false);
+  const [streakNotification, setStreakNotification] = useState(null); // { type: 'success' | 'loss', count: number }
   const [stats, setStats] = useState({
     totalStudyTime: 0,
     estimatedTime: 0,
@@ -35,14 +37,38 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        // Fetch all necessary data in parallel from REAL API
+        // Fetch profile first to get updated streak
+        const updatedUser = await api.getProfile();
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+
+        // Streak Notification Logic
+        if (!sessionStorage.getItem('streakNotified')) {
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            
+            // Check for loss notification
+            if (updatedUser.streak_lost_at) {
+                const lostDateStr = new Date(updatedUser.streak_lost_at).toISOString().split('T')[0];
+                if (lostDateStr === todayStr) {
+                    setStreakNotification({ type: 'loss' });
+                }
+            } 
+            // Check for success notification (if streak increased today)
+            else if (updatedUser.streak_count > 0) {
+                setStreakNotification({ type: 'success', count: updatedUser.streak_count });
+            }
+            sessionStorage.setItem('streakNotified', 'true');
+        }
+
+        // Fetch other data in parallel
         const [allSubjects, allTasks, allSessions] = await Promise.all([
           api.subjects.getAll().catch(err => { console.error('Subjects fetch error:', err); return []; }),
           api.tasks.getAll().catch(err => { console.error('Tasks fetch error:', err); return []; }),
           api.sessions.getAll().catch(err => { console.error('Sessions fetch error:', err); return []; })
         ]);
 
-        // Calculate statistics manually from the real data
+        // Calculate statistics
         const totalMinutes = Array.isArray(allSessions) ? allSessions.reduce((acc, s) => acc + (s.duration_minutes || 0), 0) : 0;
         const estimatedMinutes = Array.isArray(allTasks) ? allTasks.reduce((acc, t) => acc + (t.estimated_minutes || 0), 0) : 0;
         const completed = Array.isArray(allTasks) ? allTasks.filter(t => t.status === 'DONE').length : 0;
@@ -56,7 +82,6 @@ export default function Dashboard() {
 
         setSubjects(Array.isArray(allSubjects) ? allSubjects.slice(0, 4) : []);
 
-        // Helper to parse dates correctly as UTC even if 'Z' is missing
         const safeParseDate = (dateStr) => {
           if (!dateStr) return null;
           const formattedStr = dateStr.includes('T') && !dateStr.endsWith('Z') && !dateStr.includes('+') 
@@ -71,7 +96,16 @@ export default function Dashboard() {
           parsedDueDate: task.due_date ? safeParseDate(task.due_date) : null
         })) : [];
 
-        setTasks(mappedTasks.slice(0, 5));
+        // Hiển thị các Task sắp tới mà chưa hoàn thành
+        const upcomingPendingTasks = mappedTasks
+          .filter(t => t.status !== 'DONE')
+          .sort((a, b) => {
+              if (!a.parsedDueDate) return 1;
+              if (!b.parsedDueDate) return -1;
+              return a.parsedDueDate - b.parsedDueDate;
+          });
+
+        setTasks(upcomingPendingTasks.slice(0, 5));
 
         const mappedSessions = Array.isArray(allSessions) ? allSessions.map(session => {
           const task = mappedTasks.find(t => t.id?.toString() === session.task_id?.toString());
@@ -102,7 +136,7 @@ export default function Dashboard() {
 
     fetchDashboardData();
 
-    // Determine Gen Z greeting based on time
+    // Determine Gen Z greeting
     const hour = new Date().getHours();
     let currentGreeting = '';
     if (hour < 5) currentGreeting = 'Cú đêm ơi, chạy deadline rực rỡ nhé!';
@@ -113,18 +147,15 @@ export default function Dashboard() {
     
     setGreeting(currentGreeting);
 
-    // Show welcome popup once per session
     if (!sessionStorage.getItem('hasWelcomed_genz')) {
       setTimeout(() => {
         setShowWelcome(true);
         sessionStorage.setItem('hasWelcomed_genz', 'true');
-        // Auto-dismiss after 5 seconds
         setTimeout(() => {
           closeWelcome();
         }, 5000);
       }, 800);
     }
-
   }, []);
 
   if (loading) {
@@ -142,6 +173,35 @@ export default function Dashboard() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
+      
+      {/* Streak Notification Popup */}
+      {streakNotification && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] animate-in slide-in-from-top-4 duration-500">
+          {streakNotification.type === 'success' ? (
+            <div className="bg-white border-2 border-orange-100 shadow-xl rounded-2xl px-6 py-4 flex items-center gap-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center animate-bounce">
+                <Flame className="w-7 h-7 text-orange-600 fill-orange-600" />
+              </div>
+              <div>
+                <p className="font-black text-indigo-900 leading-none">Căng đét! 🔥</p>
+                <p className="text-sm text-indigo-600 font-bold mt-1">Bạn đã học {streakNotification.count} ngày liên tiếp!</p>
+              </div>
+              <button onClick={() => setStreakNotification(null)} className="ml-4 text-gray-300 hover:text-gray-500">×</button>
+            </div>
+          ) : (
+            <div className="bg-slate-100 border-2 border-slate-200 shadow-xl rounded-2xl px-6 py-4 flex items-center gap-4">
+              <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center">
+                <Flame className="w-7 h-7 text-slate-400" />
+              </div>
+              <div>
+                <p className="font-black text-slate-600 leading-none">Uầy, dập lửa mất tiêu rồi... 🌫️</p>
+                <p className="text-sm text-slate-500 font-medium mt-1">Ngày đầu mất chuỗi hơi xám xịt, nhưng đừng bỏ cuộc nha!</p>
+              </div>
+              <button onClick={() => setStreakNotification(null)} className="ml-4 text-gray-400 hover:text-gray-600">×</button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Welcome Popup Overlay */}
       {showWelcome && (
@@ -177,7 +237,7 @@ export default function Dashboard() {
             }}
           >
             <div style={{ marginBottom: '0.5rem' }}>
-              <Mascot size={100} mood="cheer" animate={true} />
+              <Mascot size={100} mood={streakNotification?.type === 'loss' ? 'sleep' : 'cheer'} animate={true} />
             </div>
             <h2 style={{
               fontSize: '1.75rem',
@@ -186,7 +246,7 @@ export default function Dashboard() {
               marginBottom: '0.75rem',
               letterSpacing: '-0.02em',
             }}>
-              Bíp bíp! Chào bạn nè!
+              {streakNotification?.type === 'loss' ? 'Huhu, Bíp Bíp buồn quá!' : 'Bíp bíp! Chào bạn nè!'}
             </h2>
             <p style={{
               fontSize: '1.15rem',
@@ -197,7 +257,9 @@ export default function Dashboard() {
             }}>
               {greeting}
               <br />
-              <span style={{ opacity: 0.75, fontSize: '1rem' }}>Chúc bạn học thật vui!</span>
+              <span style={{ opacity: 0.75, fontSize: '1rem' }}>
+                  {streakNotification?.type === 'success' ? ` Bạn đang có chuỗi ${streakNotification.count} ngày rực cháy nè!` : 'Chúc bạn học thật vui!'}
+              </span>
             </p>
             <button
               onClick={closeWelcome}
@@ -222,7 +284,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Keyframe animations for the welcome popup */}
+      {/* Keyframe animations */}
       <style>{`
         @keyframes welcomeOverlayIn {
           from { background-color: rgba(0,0,0,0); backdrop-filter: blur(0px); }
@@ -232,25 +294,35 @@ export default function Dashboard() {
           from { transform: scale(0.6); opacity: 0; }
           to { transform: scale(1); opacity: 1; }
         }
-        @keyframes welcomeBounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+        @keyframes flameFlash {
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px #ef4444); }
+          50% { transform: scale(1.15); filter: drop-shadow(0 0 10px #ef4444); }
+        }
+        .animate-flame {
+          animation: flameFlash 1.5s infinite ease-in-out;
         }
       `}</style>
 
       {/* Header */}
-      <div className="mb-10 flex items-center justify-between bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
+      <div className="mb-10 flex items-center justify-between bg-white shadow-sm p-8 rounded-3xl border border-indigo-100/50">
+        <div className="flex-1">
+          <div className="flex items-center gap-4 mb-3">
             <h1 className="text-4xl font-black text-indigo-900 tracking-tight">Trạm Học Tập</h1>
-            <Badge variant="outline" className="bg-indigo-100 text-indigo-700 border-indigo-200 uppercase font-black text-xs px-2 py-0.5 rounded-full animate-pulse">Lv.1 Tân Binh</Badge>
+            
+            {/* Streak Icon (Mới) */}
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 transition-all ${user.streak_count >= 2 ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100'}`}>
+                <Flame className={`w-5 h-5 ${user.streak_count >= 2 ? 'text-orange-600 fill-orange-600 animate-flame' : 'text-slate-300'}`} />
+                <span className={`text-sm font-black ${user.streak_count >= 2 ? 'text-orange-700' : 'text-slate-400'}`}>
+                    {user.streak_count || 0}
+                </span>
+            </div>
           </div>
           <p className="text-indigo-600/80 mt-1 font-semibold text-lg flex items-center gap-2">
              {greeting}
           </p>
         </div>
         <div className="hidden sm:flex items-center justify-center">
-           <Mascot size={90} mood="happy" animate={true} />
+           <Mascot size={110} mood={user.streak_count >= 2 ? 'cheer' : 'happy'} animate={true} />
         </div>
       </div>
 
