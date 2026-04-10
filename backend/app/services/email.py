@@ -67,4 +67,21 @@ class EmailService:
             }
         )
 
+    async def send_password_reset_email(
+        self, 
+        email_to: str, 
+        name: str, 
+        reset_link: str
+    ):
+        await self.send_email(
+            email_to=email_to,
+            subject="🔑 Reset your password - Smart Study Planner",
+            body="", 
+            template_name="password_reset.html",
+            template_body={
+                "name": name,
+                "reset_link": reset_link
+            }
+        )
+
 email_service = EmailService()

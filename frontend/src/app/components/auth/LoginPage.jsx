@@ -87,7 +87,15 @@ export default function LoginPage() {
 
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Mật khẩu</Label>
+                <Link 
+                  to="/forgot-password" 
+                  className="text-sm text-indigo-600 hover:underline"
+                >
+                  Quên mật khẩu?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -96,7 +104,6 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
                 required />
-
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">

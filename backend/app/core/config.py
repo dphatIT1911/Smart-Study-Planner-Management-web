@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = Field("http://localhost:5173", description="Frontend application URL")
 
     # CORS Settings - accepts comma-separated string or JSON array from env var
-    BACKEND_CORS_ORIGINS: Union[str, list[str]] = "http://localhost:8000"
+    BACKEND_CORS_ORIGINS: Union[str, list[str]] = "http://localhost:5173"
     
     @model_validator(mode="after")
     def validate_and_fix_settings(self):
@@ -45,6 +45,14 @@ class Settings(BaseSettings):
         origins = self.BACKEND_CORS_ORIGINS
         if isinstance(origins, str):
             self.BACKEND_CORS_ORIGINS = [o.strip() for o in origins.split(",") if o.strip()]
+
+        # Ensure FRONTEND_URL is included in allowed origins (helps deployments where only FRONTEND_URL is set)
+        try:
+            frontend = str(self.FRONTEND_URL).rstrip("/")
+            if frontend and frontend not in self.BACKEND_CORS_ORIGINS:
+                self.BACKEND_CORS_ORIGINS.append(frontend)
+        except Exception:
+            pass
             
         return self
 

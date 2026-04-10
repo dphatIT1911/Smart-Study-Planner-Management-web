@@ -27,7 +27,7 @@ const statusColors = {
   'DONE': 'bg-green-100 text-green-700 border-green-200'
 };
 
-export default function TaskTableView({ tasks, onTaskClick, onStartTimer, onTaskStatusChange }) {
+export default function TaskTableView({ tasks, onTaskClick, onStartTimer, onTaskStatusChange, deleteMode = false, onDeleteTask }) {
   if (tasks.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-dashed border-slate-200">
@@ -84,29 +84,41 @@ export default function TaskTableView({ tasks, onTaskClick, onStartTimer, onTask
                 </Badge>
               </TableCell>
               <TableCell className="text-center whitespace-nowrap">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="opacity-0 group-hover:opacity-100 transition-opacity gap-1.5 mr-2 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 font-semibold"
-                  onClick={(e) => onStartTimer && onStartTimer(task, e)}
-                >
-                  <Play className="w-4 h-4" />
-                  Pomodoro
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="opacity-0 group-hover:opacity-100 transition-opacity gap-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    if (onTaskStatusChange) {
-                      onTaskStatusChange(task.id, 'DONE');
-                    }
-                  }}
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Xong
-                </Button>
+                {deleteMode ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDeleteTask && onDeleteTask(task.id); }}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-red-600 bg-red-50 border border-red-100 rounded-md hover:bg-red-100"
+                    title="Xóa"
+                  >
+                    × Xóa
+                  </button>
+                ) : (
+                  <>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="opacity-0 group-hover:opacity-100 transition-opacity gap-1.5 mr-2 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 font-semibold"
+                      onClick={(e) => onStartTimer && onStartTimer(task, e)}
+                    >
+                      <Play className="w-4 h-4" />
+                      Pomodoro
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="opacity-0 group-hover:opacity-100 transition-opacity gap-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (onTaskStatusChange) {
+                          onTaskStatusChange(task.id, 'DONE');
+                        }
+                      }}
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      Xong
+                    </Button>
+                  </>
+                )}
               </TableCell>
             </TableRow>
           ))}

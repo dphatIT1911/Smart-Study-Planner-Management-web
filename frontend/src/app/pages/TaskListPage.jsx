@@ -16,6 +16,7 @@ export default function TaskListPage() {
   const [error, setError] = useState(null);
   
   const [viewMode, setViewMode] = useState('board');
+  const [deleteMode, setDeleteMode] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -121,16 +122,25 @@ export default function TaskListPage() {
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Danh sách công việc</h1>
           <p className="text-slate-500 mt-2">Sắp xếp và theo dõi bài tập của bạn</p>
         </div>
-        <Button 
-          className="bg-indigo-600 hover:bg-indigo-700 gap-2 shadow-sm font-medium"
-          onClick={() => {
-            setSelectedTask(null);
-            setIsModalOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          Thêm công việc
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            className="bg-indigo-600 hover:bg-indigo-700 gap-2 shadow-sm font-medium"
+            onClick={() => {
+              setSelectedTask(null);
+              setIsModalOpen(true);
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            Thêm công việc
+          </Button>
+          <Button
+            variant={deleteMode ? 'destructive' : 'outline'}
+            className="h-10 px-3"
+            onClick={() => setDeleteMode(!deleteMode)}
+          >
+            {deleteMode ? 'Hủy xóa' : 'Xóa công việc'}
+          </Button>
+        </div>
       </div>
       
       {error && (
@@ -185,9 +195,43 @@ export default function TaskListPage() {
 
       <div className="flex-1 overflow-hidden min-h-0">
         {viewMode === 'board' ? (
-          <TaskBoardView tasks={filteredTasks} onTaskClick={handleTaskClick} onStartTimer={handleStartTimer} onTaskDrop={handleTaskStatusChange} />
+          <TaskBoardView
+            tasks={filteredTasks}
+            onTaskClick={handleTaskClick}
+            onStartTimer={handleStartTimer}
+            onTaskDrop={handleTaskStatusChange}
+            deleteMode={deleteMode}
+            onDeleteTask={async (id) => {
+              if (!window.confirm('Bạn chắc chắn muốn xóa công việc này?')) return;
+              try {
+                await api.tasks.delete(id);
+                setTasks(tasks.filter(t => t.id !== id));
+                toast.success('Xóa công việc thành công');
+              } catch (err) {
+                console.error('Delete failed', err);
+                toast.error('Không thể xóa công việc', { description: err.message });
+              }
+            }}
+          />
         ) : (
-          <TaskTableView tasks={filteredTasks} onTaskClick={handleTaskClick} onStartTimer={handleStartTimer} onTaskStatusChange={handleTaskStatusChange} />
+          <TaskTableView
+            tasks={filteredTasks}
+            onTaskClick={handleTaskClick}
+            onStartTimer={handleStartTimer}
+            onTaskStatusChange={handleTaskStatusChange}
+            deleteMode={deleteMode}
+            onDeleteTask={async (id) => {
+              if (!window.confirm('Bạn chắc chắn muốn xóa công việc này?')) return;
+              try {
+                await api.tasks.delete(id);
+                setTasks(tasks.filter(t => t.id !== id));
+                toast.success('Xóa công việc thành công');
+              } catch (err) {
+                console.error('Delete failed', err);
+                toast.error('Không thể xóa công việc', { description: err.message });
+              }
+            }}
+          />
         )}
       </div>
 

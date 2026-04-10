@@ -1,6 +1,8 @@
 import { createBrowserRouter } from "react-router";
 import LoginPage from "./components/auth/LoginPage";
 import SignupPage from "./components/auth/SignupPage";
+import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./components/auth/ResetPasswordPage";
 import MainLayout from "./components/layout/MainLayout";
 import Dashboard from "./components/dashboard/Dashboard";
 import MySubjects from "./pages/MySubjects";
@@ -20,6 +22,14 @@ export const router = createBrowserRouter([
     Component: SignupPage
   },
   {
+    path: "/forgot-password",
+    Component: ForgotPasswordPage
+  },
+  {
+    path: "/reset-password",
+    Component: ResetPasswordPage
+  },
+  {
     path: "/",
     Component: MainLayout,
     children: [
@@ -29,7 +39,7 @@ export const router = createBrowserRouter([
       { path: "calendar", Component: CalendarPage },
       { path: "sessions", Component: StudySessions },
       { path: "focus", Component: FocusSpace },
-      { path: "settings", Component: Settings }]
-
-  }]
-);
+      { path: "settings", Component: Settings }
+    ]
+  }
+]);
