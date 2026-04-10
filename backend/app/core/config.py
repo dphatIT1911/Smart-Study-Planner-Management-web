@@ -23,8 +23,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = Field("http://localhost:5173", description="Frontend application URL")
 
     # CORS Settings - accepts comma-separated string or JSON array from env var
-    # Default to frontend URL so browser requests from the frontend are allowed by default.
-    BACKEND_CORS_ORIGINS: Union[str, list[str]] = Field("http://localhost:5173")
+    BACKEND_CORS_ORIGINS: Union[str, list[str]] = "http://localhost:5173"
     
     @model_validator(mode="after")
     def validate_and_fix_settings(self):

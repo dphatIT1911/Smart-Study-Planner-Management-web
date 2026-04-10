@@ -165,21 +165,23 @@ export default function TaskDetailModal({ task, subjects = [], isOpen, onOpenCha
           <div className="space-y-6">
             {/* Right sidebar options */}
             <div className="space-y-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-500 uppercase">Trạng thái</label>
-                <Select value={editedTask.status || 'TODO'} onValueChange={(val) => setEditedTask({ ...editedTask, status: val })}>
-                  <SelectTrigger className="w-full bg-white">
-                    <SelectValue placeholder="Chọn trạng thái" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((status) => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {task && (
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-500 uppercase">Trạng thái</label>
+                  <Select value={editedTask.status || 'TODO'} onValueChange={(val) => setEditedTask({ ...editedTask, status: val })}>
+                    <SelectTrigger className="w-full bg-white">
+                      <SelectValue placeholder="Chọn trạng thái" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {status.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-gray-500 uppercase">Ưu tiên</label>
