@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
-import { Plus, BookOpen, Loader2 } from 'lucide-react';
+import { Plus, BookOpen, Loader2, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { api } from '../api';
 import {
@@ -29,6 +29,7 @@ export default function MySubjects() {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newSubject, setNewSubject] = useState({
+    id: null,
     name: '',
     semester: 'HK2-2025',
     credits: 3,
@@ -63,22 +64,33 @@ export default function MySubjects() {
     setIsDetailsOpen(true);
   };
 
-  const handleCreateSubject = async (e) => {
+  const handleSubmitSubject = async (e) => {
     e.preventDefault();
     try {
       setIsSubmitting(true);
       const user = JSON.parse(localStorage.getItem('user'));
       if (!user?.id) throw new Error("Phiên đăng nhập hết hạn");
 
-      await api.subjects.create({
-        ...newSubject,
-        user_id: user.id,
-        credits: parseInt(newSubject.credits),
-        target_score: parseFloat(newSubject.target_score)
-      });
+      if (newSubject.id) {
+        await api.subjects.update(newSubject.id, {
+          name: newSubject.name,
+          semester: newSubject.semester,
+          credits: parseInt(newSubject.credits),
+          target_score: parseFloat(newSubject.target_score),
+          color: newSubject.color
+        });
+      } else {
+        await api.subjects.create({
+          ...newSubject,
+          user_id: user.id,
+          credits: parseInt(newSubject.credits),
+          target_score: parseFloat(newSubject.target_score)
+        });
+      }
       
       setIsModalOpen(false);
       setNewSubject({
+        id: null,
         name: '',
         semester: 'HK2-2025',
         credits: 3,
@@ -87,9 +99,36 @@ export default function MySubjects() {
       });
       await fetchData();
     } catch (err) {
-      alert(err.message || "Không thể thêm môn học");
+      alert(err.message || "Không thể lưu môn học");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleEditSubject = (subject) => {
+    setNewSubject({
+      id: subject.id,
+      name: subject.name,
+      semester: subject.semester,
+      credits: subject.credits,
+      target_score: subject.target_score,
+      color: subject.color
+    });
+    setIsDetailsOpen(false);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteSubject = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa môn học này không? (Lưu ý: Sẽ xóa tất cả các công việc liên quan!)")) return;
+    try {
+      setLoading(true);
+      await api.subjects.delete(id);
+      setIsDetailsOpen(false);
+      await fetchData();
+    } catch (err) {
+      alert(err.message || "Không thể xóa môn học");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -136,7 +175,10 @@ export default function MySubjects() {
         </div>
         <Button 
           className="bg-indigo-600 hover:bg-indigo-700 gap-2"
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setNewSubject({ id: null, name: '', semester: 'HK2-2025', credits: 3, target_score: 8.5, color: '#6366f1' });
+            setIsModalOpen(true);
+          }}
         >
           <Plus className="w-4 h-4" />
           Thêm môn học
@@ -232,11 +274,11 @@ export default function MySubjects() {
       {/* Add Subject Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
-          <form onSubmit={handleCreateSubject}>
+          <form onSubmit={handleSubmitSubject}>
             <DialogHeader>
-              <DialogTitle>Thêm môn học mới</DialogTitle>
+              <DialogTitle>{newSubject.id ? 'Sửa môn học' : 'Thêm môn học mới'}</DialogTitle>
               <DialogDescription>
-                Nhập thông tin chi tiết để bắt đầu theo dõi môn học mới.
+                {newSubject.id ? 'Chỉnh sửa thông tin môn học của bạn.' : 'Nhập thông tin chi tiết để bắt đầu theo dõi môn học mới.'}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -318,8 +360,8 @@ export default function MySubjects() {
                 Hủy
               </Button>
               <Button type="submit" className="bg-indigo-600" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                Thêm môn học
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : (newSubject.id ? <Edit className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />)}
+                {newSubject.id ? 'Lưu thay đổi' : 'Thêm môn học'}
               </Button>
             </DialogFooter>
           </form>
@@ -330,14 +372,24 @@ export default function MySubjects() {
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent hideClose={true} className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div 
-                className="p-2 rounded-lg"
-                style={{ backgroundColor: (selectedSubject?.color || '#6366f1') + '20' }}
-              >
-                <BookOpen className="w-6 h-6" style={{ color: selectedSubject?.color || '#6366f1' }} />
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="p-2 rounded-lg"
+                  style={{ backgroundColor: (selectedSubject?.color || '#6366f1') + '20' }}
+                >
+                  <BookOpen className="w-6 h-6" style={{ color: selectedSubject?.color || '#6366f1' }} />
+                </div>
+                <DialogTitle className="text-2xl">{selectedSubject?.name}</DialogTitle>
               </div>
-              <DialogTitle className="text-2xl">{selectedSubject?.name}</DialogTitle>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => handleEditSubject(selectedSubject)} className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 border-indigo-200 shadow-sm h-10 px-4">
+                  <Edit className="w-5 h-5 mr-2" /> <span className="font-semibold text-base">Sửa</span>
+                </Button>
+                <Button variant="outline" onClick={() => handleDeleteSubject(selectedSubject.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200 shadow-sm h-10 px-4">
+                  <Trash2 className="w-5 h-5 mr-2" /> <span className="font-semibold text-base">Xóa</span>
+                </Button>
+              </div>
             </div>
             <DialogDescription>
               Xem chi tiết và danh sách công việc của {selectedSubject?.semester}
