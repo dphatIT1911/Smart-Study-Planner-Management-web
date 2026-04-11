@@ -31,7 +31,7 @@ export default function TaskList({ tasks }) {
   return (
     <Card className="border-none shadow-md bg-white overflow-hidden">
       <CardHeader className="border-b border-gray-50 flex flex-row items-center justify-between">
-        <CardTitle className="text-xl font-bold text-gray-800">Sắp tới</CardTitle>
+        <CardTitle className="text-xl font-bold text-gray-800">Deadline sắp tới</CardTitle>
         <Badge variant="secondary" className="font-bold bg-indigo-50 text-indigo-700 border-indigo-100">
           {tasks.length} công việc
         </Badge>
@@ -40,7 +40,7 @@ export default function TaskList({ tasks }) {
         <div className="space-y-4">
           {tasks.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-gray-400 font-medium italic">Không có công việc sắp tới</p>
+              <p className="text-gray-400 font-medium italic">Không có deadline nào sắp tới</p>
             </div>
           ) : (
             tasks.map((task) => (

@@ -44,21 +44,21 @@ export default function Dashboard() {
 
         // Streak Notification Logic
         if (!sessionStorage.getItem('streakNotified')) {
-            const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
-            
-            // Check for loss notification
-            if (updatedUser.streak_lost_at) {
-                const lostDateStr = new Date(updatedUser.streak_lost_at).toISOString().split('T')[0];
-                if (lostDateStr === todayStr) {
-                    setStreakNotification({ type: 'loss' });
-                }
-            } 
-            // Check for success notification (if streak increased today)
-            else if (updatedUser.streak_count > 0) {
-                setStreakNotification({ type: 'success', count: updatedUser.streak_count });
+          const now = new Date();
+          const todayStr = now.toISOString().split('T')[0];
+
+          // Check for loss notification
+          if (updatedUser.streak_lost_at) {
+            const lostDateStr = new Date(updatedUser.streak_lost_at).toISOString().split('T')[0];
+            if (lostDateStr === todayStr) {
+              setStreakNotification({ type: 'loss' });
             }
-            sessionStorage.setItem('streakNotified', 'true');
+          }
+          // Check for success notification (if streak increased today)
+          else if (updatedUser.streak_count > 0) {
+            setStreakNotification({ type: 'success', count: updatedUser.streak_count });
+          }
+          sessionStorage.setItem('streakNotified', 'true');
         }
 
         // Fetch other data in parallel
@@ -73,19 +73,21 @@ export default function Dashboard() {
         const estimatedMinutes = Array.isArray(allTasks) ? allTasks.reduce((acc, t) => acc + (t.estimated_minutes || 0), 0) : 0;
         const completed = Array.isArray(allTasks) ? allTasks.filter(t => t.status === 'DONE').length : 0;
 
+        const activeSubs = Array.isArray(allSubjects) ? allSubjects.filter(s => !s.semester?.includes('(DONE)')) : [];
+        
         setStats({
           totalStudyTime: totalMinutes,
           estimatedTime: estimatedMinutes,
           completedTasks: completed,
-          activeSubjects: Array.isArray(allSubjects) ? allSubjects.length : 0
+          activeSubjects: activeSubs.length
         });
 
-        setSubjects(Array.isArray(allSubjects) ? allSubjects.slice(0, 4) : []);
+        setSubjects(activeSubs.slice(0, 4));
 
         const safeParseDate = (dateStr) => {
           if (!dateStr) return null;
-          const formattedStr = dateStr.includes('T') && !dateStr.endsWith('Z') && !dateStr.includes('+') 
-            ? `${dateStr}Z` 
+          const formattedStr = dateStr.includes('T') && !dateStr.endsWith('Z') && !dateStr.includes('+')
+            ? `${dateStr}Z`
             : dateStr;
           return new Date(formattedStr);
         };
@@ -96,14 +98,10 @@ export default function Dashboard() {
           parsedDueDate: task.due_date ? safeParseDate(task.due_date) : null
         })) : [];
 
-        // Hiển thị các Task sắp tới mà chưa hoàn thành
+        // Hiển thị các Task sắp tới mà chưa hoàn thành (Chỉ lấy task có đặt deadline)
         const upcomingPendingTasks = mappedTasks
-          .filter(t => t.status !== 'DONE')
-          .sort((a, b) => {
-              if (!a.parsedDueDate) return 1;
-              if (!b.parsedDueDate) return -1;
-              return a.parsedDueDate - b.parsedDueDate;
-          });
+          .filter(t => t.status !== 'DONE' && t.parsedDueDate != null)
+          .sort((a, b) => a.parsedDueDate - b.parsedDueDate);
 
         setTasks(upcomingPendingTasks.slice(0, 5));
 
@@ -126,7 +124,7 @@ export default function Dashboard() {
         }));
 
         setRecentSessions(recent);
-        
+
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
       } finally {
@@ -144,7 +142,7 @@ export default function Dashboard() {
     else if (hour < 14) currentGreeting = 'Trưa rồi nạp năng lượng rùi cày tiếp nha';
     else if (hour < 18) currentGreeting = 'Trời chiều mát mẻ, dứt điểm deadline nào';
     else currentGreeting = 'Lên đèn lên đồ... à nhầm lên bàn học thui!';
-    
+
     setGreeting(currentGreeting);
 
     if (!sessionStorage.getItem('hasWelcomed_genz')) {
@@ -167,13 +165,13 @@ export default function Dashboard() {
     );
   }
 
-  const progressRate = stats.estimatedTime > 0 
-    ? Math.round((stats.totalStudyTime / stats.estimatedTime) * 100) 
+  const progressRate = stats.estimatedTime > 0
+    ? Math.round((stats.totalStudyTime / stats.estimatedTime) * 100)
     : 0;
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
-      
+
       {/* Streak Notification Popup */}
       {streakNotification && (
         <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] animate-in slide-in-from-top-4 duration-500">
@@ -258,7 +256,7 @@ export default function Dashboard() {
               {greeting}
               <br />
               <span style={{ opacity: 0.75, fontSize: '1rem' }}>
-                  {streakNotification?.type === 'success' ? ` Bạn đang có chuỗi ${streakNotification.count} ngày rực cháy nè!` : 'Chúc bạn học thật vui!'}
+                {streakNotification?.type === 'success' ? ` Bạn đang có chuỗi ${streakNotification.count} ngày rực cháy nè!` : 'Chúc bạn học thật vui!'}
               </span>
             </p>
             <button
@@ -308,21 +306,21 @@ export default function Dashboard() {
         <div className="flex-1">
           <div className="flex items-center gap-4 mb-3">
             <h1 className="text-4xl font-black text-indigo-900 tracking-tight">Trạm Học Tập</h1>
-            
+
             {/* Streak Icon (Mới) */}
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 transition-all ${user.streak_count >= 2 ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100'}`}>
-                <Flame className={`w-5 h-5 ${user.streak_count >= 2 ? 'text-orange-600 fill-orange-600 animate-flame' : 'text-slate-300'}`} />
-                <span className={`text-sm font-black ${user.streak_count >= 2 ? 'text-orange-700' : 'text-slate-400'}`}>
-                    {user.streak_count || 0}
-                </span>
+              <Flame className={`w-5 h-5 ${user.streak_count >= 2 ? 'text-orange-600 fill-orange-600 animate-flame' : 'text-slate-300'}`} />
+              <span className={`text-sm font-black ${user.streak_count >= 2 ? 'text-orange-700' : 'text-slate-400'}`}>
+                {user.streak_count || 0}
+              </span>
             </div>
           </div>
           <p className="text-indigo-600/80 mt-1 font-semibold text-lg flex items-center gap-2">
-             {greeting}
+            {greeting}
           </p>
         </div>
         <div className="hidden sm:flex items-center justify-center">
-           <Mascot size={110} mood={user.streak_count >= 2 ? 'cheer' : 'happy'} animate={true} />
+          <Mascot size={110} mood={user.streak_count >= 2 ? 'cheer' : 'happy'} animate={true} />
         </div>
       </div>
 
@@ -334,21 +332,21 @@ export default function Dashboard() {
           subtitle={`Dự kiến ${stats.estimatedTime} phút`}
           icon={Clock}
           iconColor="bg-indigo-50 text-indigo-600" />
-        
+
         <StatCard
           title="Công việc đã xong"
           value={stats.completedTasks}
           subtitle="Cố gắng lên!"
           icon={CheckCircle2}
           iconColor="bg-green-50 text-green-600" />
-        
+
         <StatCard
           title="Môn học đang học"
           value={stats.activeSubjects}
           subtitle="Đang tham gia"
           icon={Target}
           iconColor="bg-purple-50 text-purple-600" />
-        
+
         <StatCard
           title="Tỉ lệ tiến độ"
           value={`${progressRate}%`}
@@ -363,7 +361,7 @@ export default function Dashboard() {
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Môn học của tôi</h2>
           <button onClick={() => window.location.href = '/subjects'} className="text-indigo-600 font-bold hover:underline">Xem tất cả</button>
         </div>
-        
+
         {subjects.length === 0 ? (
           <div className="bg-indigo-50/30 rounded-3xl p-8 text-center border-2 border-dashed border-indigo-200">
             <div className="flex justify-center mb-3">

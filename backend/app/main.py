@@ -30,11 +30,12 @@ def create_app() -> FastAPI:
     # CORSMiddleware is added last to wrap all inner middlewares (Auth, etc.)
     origins = [str(o).rstrip("/") for o in settings.BACKEND_CORS_ORIGINS]
     
+    # Add a fallback for common Vercel preview URLs if needed, or simply ensure robust matching
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origins,
+        allow_origins=origins + ["*"] if settings.ENVIRONMENT != "production" else origins,
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
         allow_headers=["*"],
     )
 
@@ -72,7 +73,7 @@ app = create_app()
 def read_root():
     return {"message": "Welcome to Smart Study Planner API"}
 
-@app.get("/health", tags=["System"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["System"])
 def health_check():
     """Basic health check endpoint."""
     return {"status": "ok", "app": settings.PROJECT_NAME}

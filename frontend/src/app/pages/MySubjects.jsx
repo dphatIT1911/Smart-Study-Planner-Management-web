@@ -143,6 +143,30 @@ export default function MySubjects() {
     return Math.round((completed / tasks.length) * 100);
   };
 
+  const handleToggleFinished = async (subject) => {
+    if (!subject) return;
+    const isCurrentlyFinished = subject.semester?.includes('(DONE)');
+    const baseSemester = subject.semester ? subject.semester.replace(' (DONE)', '') : '';
+    const newSemester = isCurrentlyFinished ? baseSemester : `${baseSemester} (DONE)`;
+    
+    try {
+      await api.subjects.update(subject.id, {
+        ...subject,
+        semester: newSemester
+      });
+      // reload
+      const data = await api.subjects.getAll();
+      setSubjects(data);
+      // Cập nhật lại Modal đang xem
+      setSelectedSubject({
+         ...subject,
+         semester: newSemester
+      });
+    } catch (error) {
+      console.error('Failed to toggle finish state:', error);
+    }
+  };
+
   if (loading && subjects.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-96 gap-4">
@@ -226,7 +250,7 @@ export default function MySubjects() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-xl mb-1 truncate">{subject.name}</CardTitle>
-                      <p className="text-sm text-gray-400 font-medium tracking-wide uppercase">{subject.semester}</p>
+                      <p className="text-sm text-gray-400 font-medium tracking-wide uppercase">{subject.semester?.replace(' (DONE)', '')}</p>
                     </div>
                   </div>
                 </CardHeader>
@@ -234,7 +258,9 @@ export default function MySubjects() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
                       <p className="text-gray-400 text-xs font-bold uppercase mb-1">Trạng thái</p>
-                      <p className="font-semibold text-gray-700">Đang học</p>
+                      <p className={`font-semibold ${subject.semester?.includes('(DONE)') ? 'text-indigo-600' : 'text-green-600'}`}>
+                        {subject.semester?.includes('(DONE)') ? 'Đã kết thúc' : 'Đang học'}
+                      </p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
                       <p className="text-gray-400 text-xs font-bold uppercase mb-1">Tín chỉ</p>
@@ -297,8 +323,11 @@ export default function MySubjects() {
                 <Label htmlFor="semester" className="text-right">Học kỳ</Label>
                 <Input
                   id="semester"
-                  value={newSubject.semester}
-                  onChange={(e) => setNewSubject({ ...newSubject, semester: e.target.value })}
+                  value={newSubject.semester.replace(' (DONE)', '')}
+                  onChange={(e) => {
+                     const isDone = newSubject.semester.includes('(DONE)');
+                     setNewSubject({ ...newSubject, semester: e.target.value + (isDone ? ' (DONE)' : '') });
+                  }}
                   className="col-span-3"
                   placeholder="Ví dụ: HK2-2025"
                   required
@@ -446,6 +475,12 @@ export default function MySubjects() {
           </div>
 
           <DialogFooter>
+            <Button 
+              variant={selectedSubject?.semester?.includes('(DONE)') ? "outline" : "destructive"} 
+              onClick={() => handleToggleFinished(selectedSubject)}
+            >
+              {selectedSubject?.semester?.includes('(DONE)') ? "Mở lại môn học" : "Đã kết thúc môn"}
+            </Button>
             <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>Đóng</Button>
             <Button className="bg-indigo-600" onClick={() => {
               setIsDetailsOpen(false);
