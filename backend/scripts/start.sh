@@ -4,6 +4,8 @@
 set -e
 
 # Chạy migrations (sử dụng 'heads' để tránh lỗi nếu có nhiều nhánh migration)
+# Nếu DB bị lệch version (lỗi Can't locate revision), ta stamp nó về head mới nhất
+alembic stamp head
 alembic upgrade heads
 
 echo "--- Starting Uvicorn Server ---"
