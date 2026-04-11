@@ -4,7 +4,7 @@ import SubjectCard from './SubjectCard';
 import TaskList from './TaskList';
 import RecentSessionsCard from './RecentSessionsCard';
 import { Badge } from '../ui/badge';
-import { Clock, Target, CheckCircle2, TrendingUp, Loader2, Flame, AlertCircle } from 'lucide-react';
+import { Clock, Target, CheckCircle2, Loader2, Flame, AlertCircle } from 'lucide-react';
 import Mascot from '../mascot/Mascot';
 import { api } from '../../api';
 
@@ -165,9 +165,6 @@ export default function Dashboard() {
     );
   }
 
-  const progressRate = stats.estimatedTime > 0
-    ? Math.round((stats.totalStudyTime / stats.estimatedTime) * 100)
-    : 0;
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -325,7 +322,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
         <StatCard
           title="Tổng thời gian học"
           value={`${stats.totalStudyTime} phút`}
@@ -346,13 +343,6 @@ export default function Dashboard() {
           subtitle="Đang tham gia"
           icon={Target}
           iconColor="bg-purple-50 text-purple-600" />
-
-        <StatCard
-          title="Tỉ lệ tiến độ"
-          value={`${progressRate}%`}
-          subtitle="Điểm thành tựu"
-          icon={TrendingUp}
-          iconColor="bg-blue-50 text-blue-600" />
       </div>
 
       {/* Subject Overview */}
