@@ -22,7 +22,7 @@ export default function MySubjects() {
   const [allTasks, setAllTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -87,7 +87,7 @@ export default function MySubjects() {
           target_score: parseFloat(newSubject.target_score)
         });
       }
-      
+
       setIsModalOpen(false);
       setNewSubject({
         id: null,
@@ -173,7 +173,7 @@ export default function MySubjects() {
           <h1 className="text-3xl font-bold text-gray-900">Môn học của tôi</h1>
           <p className="text-gray-600 mt-2">Quản lý khóa học và theo dõi tiến độ</p>
         </div>
-        <Button 
+        <Button
           className="bg-indigo-600 hover:bg-indigo-700 gap-2"
           onClick={() => {
             setNewSubject({ id: null, name: '', semester: 'HK2-2025', credits: 3, target_score: 8.5, color: '#6366f1' });
@@ -195,8 +195,8 @@ export default function MySubjects() {
               <h3 className="text-lg font-semibold text-gray-900">Chưa có môn học nào</h3>
               <p className="text-gray-500 mt-1 max-w-sm">Hãy thêm môn học đầu tiên để bắt đầu theo dõi tiến độ học tập của bạn.</p>
             </div>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-indigo-600 mt-2 gap-2"
               onClick={() => setIsModalOpen(true)}
             >
@@ -208,65 +208,65 @@ export default function MySubjects() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {subjects.map((subject) => {
-             const progress = calculateProgress(subject.id); 
-             
-             return (
-               <Card key={subject.id} className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-gray-100 shadow-sm">
-                 <div
-                   className="absolute top-0 left-0 right-0 h-1.5"
-                   style={{ backgroundColor: subject.color || '#6366f1' }} />
-               
-                 <CardHeader>
-                   <div className="flex items-start gap-4">
-                     <div
-                       className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
-                       style={{ backgroundColor: (subject.color || '#6366f1') + '20' }}>
-                     
-                       <BookOpen className="w-6 h-6" style={{ color: subject.color || '#6366f1' }} />
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <CardTitle className="text-xl mb-1 truncate">{subject.name}</CardTitle>
-                       <p className="text-sm text-gray-400 font-medium tracking-wide uppercase">{subject.semester}</p>
-                     </div>
-                   </div>
-                 </CardHeader>
-                 <CardContent className="space-y-4">
-                   <div className="grid grid-cols-2 gap-4 text-sm">
-                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                       <p className="text-gray-400 text-xs font-bold uppercase mb-1">Trạng thái</p>
-                       <p className="font-semibold text-gray-700">Đang học</p>
-                     </div>
-                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                       <p className="text-gray-400 text-xs font-bold uppercase mb-1">Tín chỉ</p>
-                       <p className="font-semibold text-gray-700">{subject.credits}</p>
-                     </div>
-                   </div>
-                   
-                   <div>
-                     <div className="flex justify-between text-sm mb-2">
-                       <span className="text-gray-500 font-medium">Tiến độ đạt mục tiêu</span>
-                       <span className="font-bold text-gray-900">{progress}%</span>
-                     </div>
-                     <Progress value={progress} className="h-2.5 bg-gray-100" />
-                   </div>
+            const progress = calculateProgress(subject.id);
 
-                   <div className="flex justify-between items-center pt-4 border-t border-gray-50 mt-2">
-                     <div className="text-sm flex items-center gap-2">
-                       <span className="text-gray-400 font-medium">Mục tiêu: </span>
-                       <span className="font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-base">{subject.target_score}</span>
-                     </div>
-                     <Button 
-                       variant="ghost" 
-                       size="sm" 
-                       className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-semibold gap-1"
-                       onClick={() => handleOpenDetails(subject)}
-                     >
-                       Chi tiết 
-                     </Button>
-                   </div>
-                 </CardContent>
-               </Card>
-             );
+            return (
+              <Card key={subject.id} className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-gray-100 shadow-sm">
+                <div
+                  className="absolute top-0 left-0 right-0 h-1.5"
+                  style={{ backgroundColor: subject.color || '#6366f1' }} />
+
+                <CardHeader>
+                  <div className="flex items-start gap-4">
+                    <div
+                      className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
+                      style={{ backgroundColor: (subject.color || '#6366f1') + '20' }}>
+
+                      <BookOpen className="w-6 h-6" style={{ color: subject.color || '#6366f1' }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-xl mb-1 truncate">{subject.name}</CardTitle>
+                      <p className="text-sm text-gray-400 font-medium tracking-wide uppercase">{subject.semester}</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <p className="text-gray-400 text-xs font-bold uppercase mb-1">Trạng thái</p>
+                      <p className="font-semibold text-gray-700">Đang học</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <p className="text-gray-400 text-xs font-bold uppercase mb-1">Tín chỉ</p>
+                      <p className="font-semibold text-gray-700">{subject.credits}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-gray-500 font-medium">Tiến độ đạt mục tiêu</span>
+                      <span className="font-bold text-gray-900">{progress}%</span>
+                    </div>
+                    <Progress value={progress} className="h-2.5 bg-gray-100" />
+                  </div>
+
+                  <div className="flex justify-between items-center pt-4 border-t border-gray-50 mt-2">
+                    <div className="text-sm flex items-center gap-2">
+                      <span className="text-gray-400 font-medium">Mục tiêu: </span>
+                      <span className="font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-base">{subject.target_score}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-semibold gap-1"
+                      onClick={() => handleOpenDetails(subject)}
+                    >
+                      Chi tiết
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
           })}
         </div>
       )}
@@ -287,7 +287,7 @@ export default function MySubjects() {
                 <Input
                   id="name"
                   value={newSubject.name}
-                  onChange={(e) => setNewSubject({...newSubject, name: e.target.value})}
+                  onChange={(e) => setNewSubject({ ...newSubject, name: e.target.value })}
                   className="col-span-3"
                   placeholder="Ví dụ: Toán Cao Cấp"
                   required
@@ -298,7 +298,7 @@ export default function MySubjects() {
                 <Input
                   id="semester"
                   value={newSubject.semester}
-                  onChange={(e) => setNewSubject({...newSubject, semester: e.target.value})}
+                  onChange={(e) => setNewSubject({ ...newSubject, semester: e.target.value })}
                   className="col-span-3"
                   placeholder="Ví dụ: HK2-2025"
                   required
@@ -312,7 +312,7 @@ export default function MySubjects() {
                   min="1"
                   max="10"
                   value={newSubject.credits}
-                  onChange={(e) => setNewSubject({...newSubject, credits: e.target.value})}
+                  onChange={(e) => setNewSubject({ ...newSubject, credits: e.target.value })}
                   className="col-span-3"
                   required
                 />
@@ -326,7 +326,7 @@ export default function MySubjects() {
                   min="0"
                   max="10"
                   value={newSubject.target_score}
-                  onChange={(e) => setNewSubject({...newSubject, target_score: e.target.value})}
+                  onChange={(e) => setNewSubject({ ...newSubject, target_score: e.target.value })}
                   className="col-span-3"
                   required
                 />
@@ -338,12 +338,12 @@ export default function MySubjects() {
                     id="color"
                     type="color"
                     value={newSubject.color}
-                    onChange={(e) => setNewSubject({...newSubject, color: e.target.value})}
+                    onChange={(e) => setNewSubject({ ...newSubject, color: e.target.value })}
                     className="w-12 h-10 p-1 rounded-md"
                   />
                   <Input
                     value={newSubject.color}
-                    onChange={(e) => setNewSubject({...newSubject, color: e.target.value})}
+                    onChange={(e) => setNewSubject({ ...newSubject, color: e.target.value })}
                     className="flex-1"
                     placeholder="#6366f1"
                   />
@@ -351,9 +351,9 @@ export default function MySubjects() {
               </div>
             </div>
             <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsModalOpen(false)}
                 disabled={isSubmitting}
               >
@@ -374,7 +374,7 @@ export default function MySubjects() {
           <DialogHeader>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="p-2 rounded-lg"
                   style={{ backgroundColor: (selectedSubject?.color || '#6366f1') + '20' }}
                 >
@@ -417,7 +417,7 @@ export default function MySubjects() {
                 Danh sách công việc
                 <span className="text-xs font-normal text-gray-400">Tổng cộng {getSubjectTasks(selectedSubject?.id).length} task</span>
               </h3>
-              
+
               <div className="space-y-3">
                 {getSubjectTasks(selectedSubject?.id).length === 0 ? (
                   <p className="text-sm text-gray-400 italic py-4 text-center bg-gray-50 rounded-lg border border-dashed">

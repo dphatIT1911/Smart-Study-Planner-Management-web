@@ -1,7 +1,8 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
+from app.helpers.utils import get_current_utc_time
 
 class TaskStatus(str, Enum):
     TODO = "TODO"
@@ -16,7 +17,6 @@ class TaskPriority(str, Enum):
 class TaskBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=100)
     description: Optional[str] = Field(None, max_length=5000)
-    status: TaskStatus = TaskStatus.TODO
     priority: TaskPriority = TaskPriority.MED
     due_date: Optional[datetime] = None
     estimated_minutes: int = Field(0, ge=0)
@@ -25,6 +25,20 @@ class TaskBase(BaseModel):
 class TaskCreate(TaskBase):
     user_id: int
     subject_id: Optional[int] = None
+
+    @field_validator("due_date")
+    @classmethod
+    def due_date_not_in_past(cls, v: Optional[datetime]) -> Optional[datetime]:
+        if v is None:
+            return v
+        
+        # Normalize to UTC
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+            
+        if v < get_current_utc_time():
+            raise ValueError("due_date cannot be in the past")
+        return v
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=3, max_length=100)
@@ -40,6 +54,7 @@ class TaskResponse(TaskBase):
     id: int
     user_id: int
     subject_id: Optional[int]
+    status: TaskStatus
     is_overdue: bool
     
     model_config = ConfigDict(from_attributes=True)
