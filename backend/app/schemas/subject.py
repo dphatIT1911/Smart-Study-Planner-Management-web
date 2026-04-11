@@ -17,9 +17,11 @@ class SubjectUpdate(BaseModel):
     credits: Optional[int] = Field(None, ge=1, le=10)
     target_score: Optional[float] = None
     color: Optional[str] = Field(None, pattern=r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
+    is_done: Optional[bool] = None
 
 class SubjectResponse(SubjectBase):
     id: int
     user_id: int
+    is_done: bool
     
     model_config = ConfigDict(from_attributes=True)
