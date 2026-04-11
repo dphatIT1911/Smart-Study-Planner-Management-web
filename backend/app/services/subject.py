@@ -31,7 +31,7 @@ class CRUDSubject(CRUDBase[Subject, SubjectCreate, SubjectUpdate]):
         subject = db.get(self.model, id)
         if subject:
             from app.models.task import Task
-            if not subject.is_finished:
+            if not subject.is_done:
                 # Reassign associated Tasks to "Uncategorized"
                 db.query(Task).filter(Task.subject_id == subject.id).update(
                     {Task.subject_id: None},
