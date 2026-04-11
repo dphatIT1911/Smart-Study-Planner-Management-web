@@ -27,4 +27,24 @@ class CRUDSubject(CRUDBase[Subject, SubjectCreate, SubjectUpdate]):
             .all()
         )
 
+    def remove(self, db: Session, *, id: int) -> Subject:
+        subject = db.get(self.model, id)
+        if subject:
+            from app.models.task import Task
+            if not subject.is_finished:
+                # Reassign associated Tasks to "Uncategorized"
+                db.query(Task).filter(Task.subject_id == subject.id).update(
+                    {Task.subject_id: None},
+                    synchronize_session=False
+                )
+            else:
+                # If finished, proceed with default deletion behavior (delete tasks)
+                db.query(Task).filter(Task.subject_id == subject.id).delete(
+                    synchronize_session=False
+                )
+            
+            db.delete(subject)
+            db.commit()
+        return subject
+
 subject_service = CRUDSubject(Subject)
