@@ -62,66 +62,74 @@ export default function DayTasksModal({
                   const isDone = task.status === "DONE";
                   const isOverdue = task.is_overdue && !isDone;
 
-                  return (
-                    <button
-                      key={task.id}
-                      type="button"
-                      onClick={() => onTaskClick?.(task)}
-                      className="w-full text-left rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors p-4 flex items-start gap-3"
-                    >
-                      <span
-                        className="mt-1 w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{
-                          backgroundColor: isDone
-                            ? task.subject_color || "#94a3b8"
-                            : "transparent",
-                          borderColor: task.subject_color || "#94a3b8",
-                          borderStyle: "solid",
-                          borderWidth: isDone ? "0px" : "2px",
-                        }}
-                      />
+                    const statusLabels = {
+                      'TODO': 'Cần làm',
+                      'IN_PROGRESS': 'Đang làm',
+                      'DONE': 'Hoàn thành'
+                    };
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div
-                              className={[
-                                "font-semibold truncate",
-                                isDone
-                                  ? "line-through text-slate-400"
-                                  : isOverdue
-                                  ? "text-red-700"
-                                  : "text-slate-900",
-                              ].join(" ")}
-                              title={task.title}
-                            >
-                              {task.title}
-                            </div>
-                            {task.subject_name && (
-                              <div className="text-xs text-slate-500 truncate mt-0.5">
-                                {task.subject_name}
+                    return (
+                      <button
+                        key={task.id}
+                        type="button"
+                        onClick={() => onTaskClick?.(task)}
+                        className="w-full text-left rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors p-4 flex items-start gap-3"
+                      >
+                        <span
+                          className="mt-1 w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{
+                            backgroundColor: isDone
+                              ? task.subject_color || "#94a3b8"
+                              : "transparent",
+                            borderColor: task.subject_color || "#94a3b8",
+                            borderStyle: "solid",
+                            borderWidth: isDone ? "0px" : "2px",
+                          }}
+                        />
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div
+                                className={[
+                                  "font-semibold truncate",
+                                  isDone
+                                    ? "line-through text-slate-400"
+                                    : isOverdue
+                                    ? "text-red-700"
+                                    : "text-slate-900",
+                                ].join(" ")}
+                                title={task.title}
+                              >
+                                {task.title}
                               </div>
-                            )}
-                          </div>
+                              {task.subject_name && (
+                                <div className="text-xs text-slate-500 truncate mt-0.5">
+                                  {task.subject_name}
+                                </div>
+                              )}
+                            </div>
 
-                          <div className="shrink-0 flex items-center gap-2">
-                            {isOverdue && (
-                              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-red-50 text-red-700">
-                                Quá hạn
+                            <div className="shrink-0 flex items-center gap-2">
+                              {isOverdue && (
+                                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-red-50 text-red-700">
+                                  Quá hạn
+                                </span>
+                              )}
+                              <span
+                                className={[
+                                  "text-xs font-semibold px-2 py-1 rounded-full",
+                                  isDone
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : task.status === 'IN_PROGRESS'
+                                    ? "bg-blue-50 text-blue-700"
+                                    : "bg-slate-100 text-slate-700",
+                                ].join(" ")}
+                              >
+                                {statusLabels[task.status] || task.status}
                               </span>
-                            )}
-                            <span
-                              className={[
-                                "text-xs font-semibold px-2 py-1 rounded-full",
-                                isDone
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-slate-100 text-slate-700",
-                              ].join(" ")}
-                            >
-                              {isDone ? "Đã xong" : "Chưa xong"}
-                            </span>
+                            </div>
                           </div>
-                        </div>
 
                         {task.description && (
                           <div className="text-sm text-slate-600 mt-2 line-clamp-2">

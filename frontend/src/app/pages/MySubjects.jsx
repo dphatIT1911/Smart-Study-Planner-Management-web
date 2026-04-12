@@ -167,6 +167,18 @@ export default function MySubjects() {
     }
   };
 
+  const statusLabels = {
+    'TODO': 'Cần làm',
+    'IN_PROGRESS': 'Đang làm',
+    'DONE': 'Hoàn thành'
+  };
+
+  const priorityLabels = {
+    'LOW': 'Thấp',
+    'MED': 'Trung bình',
+    'HIGH': 'Cao'
+  };
+
   if (loading && subjects.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-96 gap-4">
@@ -461,11 +473,11 @@ export default function MySubjects() {
                           <p className={`text-sm font-semibold ${task.status === 'DONE' ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
                             {task.title}
                           </p>
-                          <p className="text-[10px] text-gray-400 uppercase font-bold">Độ ưu tiên: {task.priority}</p>
+                          <p className="text-[10px] text-gray-400 uppercase font-bold">Độ ưu tiên: {priorityLabels[task.priority] || task.priority}</p>
                         </div>
                       </div>
                       <Badge variant="outline" className="text-[10px]">
-                        {task.status}
+                        {statusLabels[task.status] || task.status}
                       </Badge>
                     </div>
                   ))
