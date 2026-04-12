@@ -29,18 +29,25 @@ class EmailService:
         template_name: Optional[str] = None,
         template_body: Optional[dict] = None
     ):
-        message = MessageSchema(
-            subject=subject,
-            recipients=[email_to],
-            body=body,
-            template_body=template_body,
-            subtype=MessageType.html if template_name else MessageType.plain
-        )
-        
-        if template_name:
-            await self.fm.send_message(message, template_name=template_name)
-        else:
-            await self.fm.send_message(message)
+        try:
+            message = MessageSchema(
+                subject=subject,
+                recipients=[email_to],
+                body=body,
+                template_body=template_body,
+                subtype=MessageType.html if template_name else MessageType.plain
+            )
+            
+            if template_name:
+                await self.fm.send_message(message, template_name=template_name)
+            else:
+                await self.fm.send_message(message)
+            print(f"DEBUG: Email sent successfully to {email_to}")
+        except Exception as e:
+            print(f"DEBUG ERROR: Failed to send email to {email_to}: {str(e)}")
+            # Re-raise so background task knows it failed if needed, 
+            # but at least we see it in logs now
+            raise e
 
     async def send_deadline_reminder(
         self, 

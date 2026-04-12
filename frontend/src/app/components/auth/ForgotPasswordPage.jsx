@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
             <BookOpen className="w-6 h-6 text-white" />
           </div>
           <CardTitle className="text-2xl">Quên mật khẩu?</CardTitle>
-          <CardDescription>Đừng lo, Bíp Bíp sẽ giúp bạn lấy lại mật khẩu ngay!</CardDescription>
+          <CardDescription>Nhập địa chỉ email của bạn để nhận liên kết đặt lại mật khẩu.</CardDescription>
         </CardHeader>
         
         {success ? (

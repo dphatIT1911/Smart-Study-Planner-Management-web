@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
             <BookOpen className="w-6 h-6 text-white" />
           </div>
           <CardTitle className="text-2xl">Đặt lại mật khẩu</CardTitle>
-          <CardDescription>Thiết lập mật khẩu mới thật bảo mật thui nào!</CardDescription>
+          <CardDescription>Vui lòng nhập mật khẩu mới cho tài khoản của bạn.</CardDescription>
         </CardHeader>
         
         {success ? (
