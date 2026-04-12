@@ -13,14 +13,15 @@ class EmailService:
             MAIL_USERNAME=settings.SMTP_USER,
             MAIL_PASSWORD=settings.SMTP_PASSWORD,
             MAIL_FROM=settings.EMAILS_FROM_EMAIL or settings.SMTP_USER,
-            MAIL_PORT=465,
+            MAIL_PORT=587,
             MAIL_SERVER="smtp.gmail.com",
             MAIL_FROM_NAME=settings.EMAILS_FROM_NAME,
-            MAIL_STARTTLS=False,
-            MAIL_SSL_TLS=True,
+            MAIL_STARTTLS=True,
+            MAIL_SSL_TLS=False,
             USE_CREDENTIALS=True,
-            VALIDATE_CERTS=True,
-            TEMPLATE_FOLDER=template_dir
+            VALIDATE_CERTS=False,
+            TEMPLATE_FOLDER=template_dir,
+            TIMEOUT=180
         )
         self.fm = FastMail(self.conf)
         print(f"DEBUG: EmailService initialized with user {settings.SMTP_USER} and template dir {template_dir}")
