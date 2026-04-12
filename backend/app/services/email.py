@@ -6,20 +6,24 @@ import os
 
 class EmailService:
     def __init__(self):
+        # Use absolute path for templates
+        template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../templates/email"))
+        
         self.conf = ConnectionConfig(
             MAIL_USERNAME=settings.SMTP_USER,
             MAIL_PASSWORD=settings.SMTP_PASSWORD,
-            MAIL_FROM=settings.EMAILS_FROM_EMAIL,
-            MAIL_PORT=465,
-            MAIL_SERVER=settings.SMTP_HOST,
+            MAIL_FROM=settings.EMAILS_FROM_EMAIL or settings.SMTP_USER,
+            MAIL_PORT=587,
+            MAIL_SERVER="smtp.gmail.com",
             MAIL_FROM_NAME=settings.EMAILS_FROM_NAME,
-            MAIL_STARTTLS=False,
-            MAIL_SSL_TLS=True,
+            MAIL_STARTTLS=True,
+            MAIL_SSL_TLS=False,
             USE_CREDENTIALS=True,
             VALIDATE_CERTS=True,
-            TEMPLATE_FOLDER=os.path.abspath(os.path.join(os.path.dirname(__file__), "../templates/email"))
+            TEMPLATE_FOLDER=template_dir
         )
         self.fm = FastMail(self.conf)
+        print(f"DEBUG: EmailService initialized with user {settings.SMTP_USER} and template dir {template_dir}")
 
     async def send_email(
         self, 
