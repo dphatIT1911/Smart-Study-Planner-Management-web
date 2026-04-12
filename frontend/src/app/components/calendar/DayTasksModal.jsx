@@ -26,7 +26,7 @@ export default function DayTasksModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[720px] h-[85vh] p-0 overflow-hidden">
+      <DialogContent hideClose={true} className="sm:max-w-[720px] h-[85vh] p-0 overflow-hidden">
         <div className="flex flex-col h-full">
           <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle className="flex items-center justify-between gap-3">
