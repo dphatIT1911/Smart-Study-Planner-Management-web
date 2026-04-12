@@ -10,14 +10,14 @@ class EmailService:
             MAIL_USERNAME=settings.SMTP_USER,
             MAIL_PASSWORD=settings.SMTP_PASSWORD,
             MAIL_FROM=settings.EMAILS_FROM_EMAIL,
-            MAIL_PORT=settings.SMTP_PORT,
+            MAIL_PORT=465,
             MAIL_SERVER=settings.SMTP_HOST,
             MAIL_FROM_NAME=settings.EMAILS_FROM_NAME,
-            MAIL_STARTTLS=True,
-            MAIL_SSL_TLS=False,
+            MAIL_STARTTLS=False,
+            MAIL_SSL_TLS=True,
             USE_CREDENTIALS=True,
             VALIDATE_CERTS=True,
-            TEMPLATE_FOLDER=os.path.join(os.path.dirname(__file__), "../templates/email")
+            TEMPLATE_FOLDER=os.path.abspath(os.path.join(os.path.dirname(__file__), "../templates/email"))
         )
         self.fm = FastMail(self.conf)
 
