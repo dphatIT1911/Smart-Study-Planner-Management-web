@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = Field(587, description="SMTP Server Port")
     SMTP_USER: str = Field("", description="SMTP User")
     SMTP_PASSWORD: str = Field("", description="SMTP Password")
-    EMAILS_FROM_EMAIL: str = Field("info@smartstudy.com", description="From email address")
+    EMAILS_FROM_EMAIL: str = Field("", description="From email address")
     EMAILS_FROM_NAME: str = Field("Smart Study Planner", description="From email name")
     FRONTEND_URL: str = Field("http://localhost:5173", description="Frontend application URL")
 
@@ -46,7 +46,11 @@ class Settings(BaseSettings):
         if isinstance(origins, str):
             self.BACKEND_CORS_ORIGINS = [o.strip() for o in origins.split(",") if o.strip()]
 
-        # Ensure FRONTEND_URL is included in allowed origins (helps deployments where only FRONTEND_URL is set)
+        # 3. Default EMAILS_FROM_EMAIL to SMTP_USER if not set
+        if not self.EMAILS_FROM_EMAIL and self.SMTP_USER:
+            self.EMAILS_FROM_EMAIL = self.SMTP_USER
+
+        # 4. Ensure FRONTEND_URL is included in allowed origins (helps deployments where only FRONTEND_URL is set)
         try:
             frontend = str(self.FRONTEND_URL).rstrip("/")
             if frontend and frontend not in self.BACKEND_CORS_ORIGINS:
