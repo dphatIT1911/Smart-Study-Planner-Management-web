@@ -108,6 +108,7 @@ def read_user_profile(
 
 @router.post("/forgot-password")
 async def forgot_password(
+    background_tasks: BackgroundTasks,
     email_in: ForgotPassword,
     db: Session = Depends(get_db)
 ) -> Any:
@@ -123,9 +124,10 @@ async def forgot_password(
     db.add(user)
     db.commit()
     
-    # Send email directly (for debugging)
+    # Send email in background
     reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
-    await email_service.send_password_reset_email(
+    background_tasks.add_task(
+        email_service.send_password_reset_email,
         email_to=user.email,
         name=user.name,
         reset_link=reset_link
