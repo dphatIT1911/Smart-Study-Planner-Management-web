@@ -1,6 +1,7 @@
 import { Outlet, useNavigate, useLocation } from 'react-router';
 import { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
+import ChatBot from '../chat/ChatBot';
 
 export default function MainLayout() {
   const navigate = useNavigate();
@@ -26,6 +27,8 @@ export default function MainLayout() {
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
+      <ChatBot />
     </div>);
+
 
 }

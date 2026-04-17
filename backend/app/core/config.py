@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     EMAILS_FROM_EMAIL: str = Field("", description="From email address")
     EMAILS_FROM_NAME: str = Field("Smart Study Planner", description="From email name")
     FRONTEND_URL: str = Field("http://localhost:5173", description="Frontend application URL")
+    
+    # AI Config
+    OPENAI_API_KEY: str = Field("", description="OpenAI API Key for Chatbot (Primary)")
+    GEMINI_API_KEY: str = Field("", description="Google Gemini API Key (Fallback)")
+
 
     # CORS Settings - accepts comma-separated string or JSON array from env var
     BACKEND_CORS_ORIGINS: Union[str, list[str]] = "http://localhost:5173"
