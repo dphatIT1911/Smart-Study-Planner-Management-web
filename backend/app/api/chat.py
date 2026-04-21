@@ -47,7 +47,8 @@ async def generate_with_gemini(messages: list, system_prompt: str):
     except Exception as e:
         print(f"Gemini API Error: {str(e)}")
         yield "data: [ERROR]\n\n"
-        yield f"data: Lỗi! Cả hệ thống OpenAI và Gemini dự phòng đều đang gặp sự cố: {str(e)}\n\n"
+        error_msg = f"Lỗi! Cả hệ thống OpenAI và Gemini dự phòng đều đang gặp sự cố: {str(e)}"
+        yield f"data: {json.dumps({'content': error_msg})}\n\n"
 
 
 async def generate_chat_response(messages: list, user_context: str):
@@ -98,7 +99,8 @@ Dựa vào thông tin trên, hãy đưa ra lời khuyên phù hợp và cá nhâ
              yield chunk
     else:
         yield "data: [ERROR]\n\n"
-        yield "data: Vui lòng thay thế đoạn mã giữ chỗ (placeholder) bằng API Key thật của OpenAI hoặc Gemini trong backend/app/core/config.py.\n\n"
+        error_msg = "Vui lòng kiểm tra lại API Key thật của OpenAI hoặc Gemini trên Render Environment."
+        yield f"data: {json.dumps({'content': error_msg})}\n\n"
 
 
 @router.post("")
