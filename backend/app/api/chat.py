@@ -122,7 +122,7 @@ async def chat_with_bot(
     
     # Xây dựng chuỗi thông tin context
     context_lines = [
-        f"Tên người dùng: {current_user.full_name or current_user.email}",
+        f"Tên người dùng: {current_user.name or current_user.email}",
         f"Ngày giờ hiện tại: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         "--- Danh sách môn học ---"
     ]
