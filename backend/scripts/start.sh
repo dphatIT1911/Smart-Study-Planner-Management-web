@@ -7,6 +7,7 @@ set -e
 python scripts/fix_db.py
 
 # Chạy migrations (sử dụng 'heads' để tránh lỗi nếu có nhiều nhánh migration)
+alembic stamp head
 alembic upgrade head
 
 echo "--- Starting Uvicorn Server ---"
