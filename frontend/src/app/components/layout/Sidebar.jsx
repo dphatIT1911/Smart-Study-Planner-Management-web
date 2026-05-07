@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router';
 import { LayoutDashboard, BookOpen, CheckSquare, Clock, Settings, LogOut, Target, CalendarDays } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback } from '../ui/avatar';
+import NotificationBell from './NotificationBell';
 
 
 
@@ -78,6 +79,11 @@ export default function Sidebar({ user, currentPath }) {
 
         })}
       </nav>
+
+      {/* Notification Bell */}
+      <div className="px-3 pb-2 flex items-center justify-center group-hover/sidebar:justify-start">
+        <NotificationBell />
+      </div>
 
       {/* User Profile */}
       <div className="p-3 border-t border-gray-200">
