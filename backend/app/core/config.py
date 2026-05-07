@@ -18,9 +18,10 @@ class Settings(BaseSettings):
     
     FRONTEND_URL: str = Field("http://localhost:5173", description="Frontend application URL")
     
-    # AI Config
-    OPENAI_API_KEY: str = Field("", description="OpenAI API Key for Chatbot (Primary)")
-    GEMINI_API_KEY: str = Field("", description="Google Gemini API Key (Fallback)")
+    # AI Config - OpenAI (primary) + Gemini (fallback, luân phiên giữa 2 keys)
+    OPENAI_API_KEY: str = Field("", description="OpenAI API Key (Primary)")
+    GEMINI_API_KEY: str = Field("", description="Google Gemini API Key 1 (Fallback)")
+    GEMINI_API_KEY_2: str = Field("", description="Google Gemini API Key 2 (Fallback)")
 
 
     # CORS Settings - accepts comma-separated string or JSON array from env var
