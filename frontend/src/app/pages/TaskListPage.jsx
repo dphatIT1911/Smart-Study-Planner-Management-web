@@ -54,6 +54,13 @@ export default function TaskListPage() {
     };
 
     fetchData();
+
+    // Listen for task updates from child components (e.g. Magic Breakdown)
+    const handleTasksUpdated = () => {
+      fetchData();
+    };
+    window.addEventListener('tasks-updated', handleTasksUpdated);
+    return () => window.removeEventListener('tasks-updated', handleTasksUpdated);
   }, []);
 
   const filteredTasks = tasks.filter((task) => {
@@ -80,17 +87,45 @@ export default function TaskListPage() {
 
   const handleSaveTask = async (taskData) => {
     try {
-      if (taskData.id) {
-        const updatedTask = await api.tasks.update(taskData.id, taskData);
+      const { _autoBreakdown, ...cleanData } = taskData;
+
+      if (cleanData.id) {
+        const updatedTask = await api.tasks.update(cleanData.id, cleanData);
         setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
       } else {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const newTask = await api.tasks.create({...taskData, user_id: user?.id});
-        setTasks([...tasks, newTask]);
+        const newTask = await api.tasks.create({...cleanData, user_id: user?.id});
+        setTasks(prev => [...prev, newTask]);
+
+        // Auto-breakdown if the user marked this as a "Task lớn"
+        if (_autoBreakdown && newTask.id && newTask.due_date) {
+          try {
+            const result = await api.tasks.breakdown(newTask.id);
+            if (result.created_subtasks?.length > 0) {
+              toast.success('🪄 Đã tự động phân chia!', {
+                description: `Tạo ${result.created_subtasks.length} task con từ "${newTask.title}"`,
+              });
+              // Refresh full list to include the new child tasks
+              const refreshed = await api.tasks.getAll();
+              setTasks(refreshed);
+            }
+          } catch (breakdownErr) {
+            console.error('Auto-breakdown failed:', breakdownErr);
+            toast.info('Task đã tạo, nhưng không thể tự động phân chia.', {
+              description: breakdownErr.message,
+            });
+          }
+        }
       }
     } catch (err) {
       toast.error('Lỗi khi lưu', { description: err.message || 'Không thể lưu công việc do lỗi kết nối' });
     }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    await api.tasks.delete(taskId);
+    setTasks(tasks.filter(t => t.id !== taskId));
+    toast.success('Đã xóa công việc thành công');
   };
 
   const handleTaskStatusChange = async (taskId, newStatus) => {
@@ -241,6 +276,7 @@ export default function TaskListPage() {
         isOpen={isModalOpen} 
         onOpenChange={setIsModalOpen} 
         onSave={handleSaveTask}
+        onDelete={handleDeleteTask}
       />
     </div>
   );

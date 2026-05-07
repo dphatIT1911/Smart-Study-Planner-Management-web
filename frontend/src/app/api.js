@@ -26,11 +26,20 @@ export const api = {
   },
 
   // Authentication
-  async loginWithGoogle(credential) {
-    const response = await fetch(`${BASE}/auth/google`, {
+  async login(email, password) {
+    const response = await fetch(`${BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credential }),
+      body: JSON.stringify({ email, password }),
+    });
+    return this.handleResponse(response);
+  },
+
+  async register({ name, email, password, confirm_password }) {
+    const response = await fetch(`${BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, confirm_password }),
     });
     return this.handleResponse(response);
   },
@@ -110,6 +119,8 @@ export const api = {
     update: (id, data) => api.patch(`tasks/${id}`, data),
     delete: (id) => api.delete(`tasks/${id}`),
     markComplete: (id) => api.patch(`tasks/${id}`, { status: 'DONE' }),
+    breakdown: (id) => api.post(`tasks/${id}/breakdown`, {}),
+    getBusynessStats: (startDate, endDate) => api.get(`tasks/busyness-stats?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
   },
 
   sessions: {
