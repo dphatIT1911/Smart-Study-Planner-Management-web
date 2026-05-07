@@ -26,40 +26,17 @@ export const api = {
   },
 
   // Authentication
-  async login(formData) {
-    const response = await fetch(`${BASE}/auth/login`, {
-      method: 'POST',
-      body: formData, 
-    });
-    return this.handleResponse(response);
-  },
-
-  async register(userData) {
-    console.log('Registering with:', userData);
-    const response = await fetch(`${BASE}/auth/register`, {
+  async loginWithGoogle(credential) {
+    const response = await fetch(`${BASE}/auth/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: userData.email,
-        name: userData.name,
-        password: userData.password,
-        confirm_password: userData.confirm_password,
-        timezone: userData.timezone || 'UTC'
-      }),
+      body: JSON.stringify({ credential }),
     });
     return this.handleResponse(response);
   },
 
   async getProfile() {
     return this.get(`auth/profile`);
-  },
-
-  async forgotPassword(email) {
-    return this.post('auth/forgot-password', { email });
-  },
-
-  async resetPassword(token, newPassword) {
-    return this.post('auth/reset-password', { token, new_password: newPassword });
   },
 
   // Base methods
@@ -143,5 +120,11 @@ export const api = {
 
   analytics: {
     getSummary: (userId) => api.get(`analytics/summary?user_id=${userId}&group_by=week`),
+  },
+
+  notifications: {
+    getAll: () => api.get('notifications/'),
+    markAsRead: (id) => api.patch(`notifications/${id}/read`, {}),
+    markAllAsRead: () => api.patch('notifications/read-all', {}),
   }
 };

@@ -1,35 +1,18 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { BookOpen, Loader2, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { BookOpen, AlertCircle } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import { api } from '../../api';
-import config from '../../../config';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleGoogleSuccess = async (credentialResponse) => {
     setError('');
-    setLoading(true);
-
     try {
-      if (!email || !password) {
-        throw new Error('Vui lòng nhập Email và Mật khẩu');
-      }
-
-      const formData = new FormData();
-      formData.append('username', email);
-      formData.append('password', password);
-
-      const data = await api.login(formData);
+      const data = await api.loginWithGoogle(credentialResponse.credential);
       localStorage.setItem('token', data.access_token);
 
       const profile = await api.getProfile();
@@ -38,22 +21,12 @@ export default function LoginPage() {
       navigate('/');
     } catch (err) {
       console.error('Login error:', err);
-      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('fetch')) {
-        const isProd = config.IS_PROD;
-        const apiUrl = config.API_BASE_URL;
-        if (isProd && !apiUrl) {
-          setError('Lỗi cấu hình: VITE_API_URL chưa được thiết lập.')
-        } else {
-          setError('Không thể kết nối đến máy chủ API.');
-        }
-      } else if (err.message.includes('404')) {
-        setError('Không tìm thấy API (404).');
-      } else {
-        setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
-      }
-    } finally {
-      setLoading(false);
+      setError(err.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
     }
+  };
+
+  const handleGoogleError = () => {
+    setError('Đăng nhập Google thất bại. Vui lòng thử lại.');
   };
 
   return (
@@ -64,72 +37,29 @@ export default function LoginPage() {
             <BookOpen className="w-6 h-6 text-white" />
           </div>
           <CardTitle className="text-2xl">Chào mừng trở lại</CardTitle>
-          <CardDescription>Đăng nhập vào tài khoản Study Planner của bạn</CardDescription>
+          <CardDescription>Đăng nhập vào tài khoản Study Planner bằng Google</CardDescription>
         </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2 text-sm animate-in fade-in slide-in-from-top-1">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <p>{error}</p>
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                required />
-
+        <CardContent className="space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2 text-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <p>{error}</p>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Mật khẩu</Label>
-                <Link 
-                  to="/forgot-password" 
-                  className="text-sm text-indigo-600 hover:underline"
-                >
-                  Quên mật khẩu?
-                </Link>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                required />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 transition-all font-semibold py-6 text-base"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Đang xác thực...
-                </>
-              ) : (
-                'Đăng nhập'
-              )}
-            </Button>
-            <p className="text-sm text-center text-gray-600">
-              Chưa có tài khoản?{' '}
-              <Link to="/signup" className="text-indigo-600 hover:underline">
-                Đăng ký ngay
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
+          )}
+          
+          <div className="flex justify-center pt-4 pb-8">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              useOneTap
+              theme="filled_blue"
+              shape="pill"
+              size="large"
+              text="continue_with"
+            />
+          </div>
+        </CardContent>
       </Card>
-    </div>);
-
+    </div>
+  );
 }

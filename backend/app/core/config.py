@@ -13,13 +13,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
 
-    # SMTP Settings
-    SMTP_HOST: str = Field("smtp.gmail.com", description="SMTP Server Host")
-    SMTP_PORT: int = Field(587, description="SMTP Server Port")
-    SMTP_USER: str = Field("", description="SMTP User")
-    SMTP_PASSWORD: str = Field("", description="SMTP Password")
-    EMAILS_FROM_EMAIL: str = Field("", description="From email address")
-    EMAILS_FROM_NAME: str = Field("Smart Study Planner", description="From email name")
+    # Google Auth Settings
+    GOOGLE_CLIENT_ID: str = Field(..., description="Google OAuth Client ID")
+    
     FRONTEND_URL: str = Field("http://localhost:5173", description="Frontend application URL")
     
     # AI Config
@@ -50,10 +46,6 @@ class Settings(BaseSettings):
         origins = self.BACKEND_CORS_ORIGINS
         if isinstance(origins, str):
             self.BACKEND_CORS_ORIGINS = [o.strip() for o in origins.split(",") if o.strip()]
-
-        # 3. Default EMAILS_FROM_EMAIL to SMTP_USER if not set
-        if not self.EMAILS_FROM_EMAIL and self.SMTP_USER:
-            self.EMAILS_FROM_EMAIL = self.SMTP_USER
 
         # 4. Ensure FRONTEND_URL is included in allowed origins (helps deployments where only FRONTEND_URL is set)
         try:
