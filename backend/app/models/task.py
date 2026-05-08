@@ -1,5 +1,5 @@
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from sqlalchemy import ForeignKey, String, Text, DateTime, Integer, Enum, Index
@@ -27,6 +27,9 @@ class Task(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     subject_id: Mapped[Optional[int]] = mapped_column(ForeignKey("subjects.id"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    parent_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("tasks.id", ondelete="CASCADE"), nullable=True
+    )
     
     title: Mapped[str] = mapped_column(String(100))
     description: Mapped[Optional[str]] = mapped_column(Text)
@@ -34,6 +37,9 @@ class Task(Base):
     priority: Mapped[TaskPriority] = mapped_column(Enum(TaskPriority), default=TaskPriority.MED)
     
     due_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     estimated_minutes: Mapped[int] = mapped_column(Integer, default=0)
     actual_minutes: Mapped[int] = mapped_column(Integer, default=0)
     reminder_sent: Mapped[bool] = mapped_column(default=False)
@@ -43,4 +49,11 @@ class Task(Base):
     subject: Mapped[Optional["Subject"]] = relationship(back_populates="tasks")
     study_sessions: Mapped[List["StudySession"]] = relationship(
         back_populates="task", cascade="all, delete-orphan"
+    )
+    # Self-referential: parent/children for auto-breakdown sub-tasks
+    parent: Mapped[Optional["Task"]] = relationship(
+        back_populates="children", remote_side="Task.id"
+    )
+    children: Mapped[List["Task"]] = relationship(
+        back_populates="parent", cascade="all, delete-orphan"
     )

@@ -12,19 +12,13 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field("your-super-secret-key-change-in-production", description="Secret key for JWT")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
-
-    # SMTP Settings
-    SMTP_HOST: str = Field("smtp.gmail.com", description="SMTP Server Host")
-    SMTP_PORT: int = Field(587, description="SMTP Server Port")
-    SMTP_USER: str = Field("", description="SMTP User")
-    SMTP_PASSWORD: str = Field("", description="SMTP Password")
-    EMAILS_FROM_EMAIL: str = Field("", description="From email address")
-    EMAILS_FROM_NAME: str = Field("Smart Study Planner", description="From email name")
+    
     FRONTEND_URL: str = Field("http://localhost:5173", description="Frontend application URL")
     
-    # AI Config
-    OPENAI_API_KEY: str = Field("", description="OpenAI API Key for Chatbot (Primary)")
-    GEMINI_API_KEY: str = Field("", description="Google Gemini API Key (Fallback)")
+    # AI Config - OpenAI (primary) + Gemini (fallback, luân phiên giữa 2 keys)
+    OPENAI_API_KEY: str = Field("", description="OpenAI API Key (Primary)")
+    GEMINI_API_KEY: str = Field("", description="Google Gemini API Key 1 (Fallback)")
+    GEMINI_API_KEY_2: str = Field("", description="Google Gemini API Key 2 (Fallback)")
 
 
     # CORS Settings - accepts comma-separated string or JSON array from env var
@@ -51,10 +45,6 @@ class Settings(BaseSettings):
         if isinstance(origins, str):
             self.BACKEND_CORS_ORIGINS = [o.strip() for o in origins.split(",") if o.strip()]
 
-        # 3. Default EMAILS_FROM_EMAIL to SMTP_USER if not set
-        if not self.EMAILS_FROM_EMAIL and self.SMTP_USER:
-            self.EMAILS_FROM_EMAIL = self.SMTP_USER
-
         # 4. Ensure FRONTEND_URL is included in allowed origins (helps deployments where only FRONTEND_URL is set)
         try:
             frontend = str(self.FRONTEND_URL).rstrip("/")
@@ -70,6 +60,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
+        extra="ignore"
     )
 
 settings = Settings()

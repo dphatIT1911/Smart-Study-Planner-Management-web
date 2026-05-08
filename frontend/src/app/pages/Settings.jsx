@@ -164,49 +164,19 @@ export default function Settings() {
         <Card>
           <CardHeader>
             <CardTitle>Thông báo</CardTitle>
-            <CardDescription>Quản lý cách bạn nhận cập nhật</CardDescription>
+            <CardDescription>Cách hệ thống thông báo cho bạn</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+              <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center shrink-0">
+                <span className="text-indigo-600 text-lg">🔔</span>
+              </div>
               <div>
-                <p className="font-medium text-gray-900">Thông báo qua Email</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Nhận email nhắc nhở cho các công việc sắp tới
+                <p className="font-medium text-gray-900 text-sm">Thông báo Deadline In-App</p>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Hệ thống sẽ tự động gửi thông báo lên biểu tượng chuông khi task còn dưới 24 giờ. Bấm vào chuông ở thanh bên trái để xem.
                 </p>
               </div>
-              <input
-                type="checkbox"
-                className="w-5 h-5 text-indigo-600 rounded"
-                defaultChecked />
-              
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-900">Nhắc nhở học tập</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Nhận nhắc nhở hàng ngày để giữ đúng tiến độ
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                className="w-5 h-5 text-indigo-600 rounded"
-                defaultChecked />
-              
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-900">Cập nhật tiến độ</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Bản tóm tắt hàng tuần về thành tích của bạn
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                className="w-5 h-5 text-indigo-600 rounded"
-                defaultChecked />
-              
             </div>
           </CardContent>
         </Card>

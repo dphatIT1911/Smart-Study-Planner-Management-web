@@ -43,6 +43,13 @@ export default function ChatBot() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          // Token hết hạn hoặc không hợp lệ -> Xóa và bắt đăng nhập lại
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          return;
+        }
         throw new Error('Lỗi kết nối máy chủ');
       }
 

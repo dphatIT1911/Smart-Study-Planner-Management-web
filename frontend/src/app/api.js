@@ -26,40 +26,26 @@ export const api = {
   },
 
   // Authentication
-  async login(formData) {
+  async login(email, password) {
     const response = await fetch(`${BASE}/auth/login`, {
       method: 'POST',
-      body: formData, 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     });
     return this.handleResponse(response);
   },
 
-  async register(userData) {
-    console.log('Registering with:', userData);
+  async register({ name, email, password, confirm_password }) {
     const response = await fetch(`${BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: userData.email,
-        name: userData.name,
-        password: userData.password,
-        confirm_password: userData.confirm_password,
-        timezone: userData.timezone || 'UTC'
-      }),
+      body: JSON.stringify({ name, email, password, confirm_password }),
     });
     return this.handleResponse(response);
   },
 
   async getProfile() {
     return this.get(`auth/profile`);
-  },
-
-  async forgotPassword(email) {
-    return this.post('auth/forgot-password', { email });
-  },
-
-  async resetPassword(token, newPassword) {
-    return this.post('auth/reset-password', { token, new_password: newPassword });
   },
 
   // Base methods
@@ -133,6 +119,8 @@ export const api = {
     update: (id, data) => api.patch(`tasks/${id}`, data),
     delete: (id) => api.delete(`tasks/${id}`),
     markComplete: (id) => api.patch(`tasks/${id}`, { status: 'DONE' }),
+    breakdown: (id) => api.post(`tasks/${id}/breakdown`, {}),
+    getBusynessStats: (startDate, endDate) => api.get(`tasks/busyness-stats?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
   },
 
   sessions: {
@@ -143,5 +131,11 @@ export const api = {
 
   analytics: {
     getSummary: (userId) => api.get(`analytics/summary?user_id=${userId}&group_by=week`),
+  },
+
+  notifications: {
+    getAll: () => api.get('notifications/'),
+    markAsRead: (id) => api.patch(`notifications/${id}/read`, {}),
+    markAllAsRead: () => api.patch('notifications/read-all', {}),
   }
 };

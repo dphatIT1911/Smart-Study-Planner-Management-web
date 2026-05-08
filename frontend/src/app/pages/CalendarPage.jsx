@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { format, addMonths, subMonths, startOfWeek, endOfWeek, 
+import { format, addMonths, subMonths, addWeeks, subWeeks, startOfWeek, endOfWeek, 
          startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, parseISO, parse, isValid } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, AlertCircle, CheckCircle2, LayoutGrid, Rows3 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { api } from '../api';
 import { Button } from '../components/ui/button';
@@ -26,6 +26,7 @@ export default function CalendarPage() {
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
   const [monthInput, setMonthInput] = useState(currentDate.getMonth() + 1);
   const [yearInput, setYearInput] = useState(currentDate.getFullYear());
+  const [viewMode, setViewMode] = useState('month'); // 'month' or 'week'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,16 +35,19 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetchCalendarTasks();
-  }, [currentDate]);
+  }, [currentDate, viewMode]);
 
   const fetchCalendarTasks = async () => {
     setLoading(true);
     try {
       // Gửi range theo UTC để backend so sánh đúng với due_date lưu dạng naive UTC
-      const monthStart = startOfMonth(currentDate);
-      const monthEnd = endOfMonth(monthStart);
-      const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-      const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
+      const startDate = viewMode === 'month' 
+        ? startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 })
+        : startOfWeek(currentDate, { weekStartsOn: 1 });
+        
+      const endDate = viewMode === 'month'
+        ? endOfWeek(endOfMonth(currentDate), { weekStartsOn: 1 })
+        : endOfWeek(currentDate, { weekStartsOn: 1 });
 
       // Set endDate về cuối ngày để không bỏ sót task cuối ngày cuối tuần
       const endOfDay = new Date(endDate);
@@ -77,8 +81,8 @@ export default function CalendarPage() {
     }
   };
 
-  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const nextMonth = () => setCurrentDate(viewMode === 'month' ? addMonths(currentDate, 1) : addWeeks(currentDate, 1));
+  const prevMonth = () => setCurrentDate(viewMode === 'month' ? subMonths(currentDate, 1) : subWeeks(currentDate, 1));
 
   useEffect(() => {
     if (isMonthPickerOpen) {
@@ -105,8 +109,12 @@ export default function CalendarPage() {
   // Generate days for the grid
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-  const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  const startDate = viewMode === 'month' 
+    ? startOfWeek(monthStart, { weekStartsOn: 1 })
+    : startOfWeek(currentDate, { weekStartsOn: 1 });
+  const endDate = viewMode === 'month'
+    ? endOfWeek(monthEnd, { weekStartsOn: 1 })
+    : endOfWeek(currentDate, { weekStartsOn: 1 });
 
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
@@ -145,10 +153,12 @@ export default function CalendarPage() {
 
   const getTasksForDay = (day) => {
     const dayKey = format(day, 'yyyy-MM-dd');
-    return tasks.filter(task => {
+    const dayTasks = tasks.filter(task => {
       const key = getTaskDayKey(task.due_date);
       return key && key === dayKey;
     });
+    // Sắp xếp theo task_id tăng dần
+    return dayTasks.sort((a, b) => a.id - b.id);
   };
 
   return (
@@ -156,7 +166,29 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-500 mt-1">Quản lý thời gian và các mốc hoàn thành công việc</p>
+          <div className="flex items-center gap-3">
+            <div className="bg-white rounded-lg p-1 border border-gray-200 shadow-sm flex items-center">
+              <button
+                onClick={() => setViewMode('month')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
+                  viewMode === 'month' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                Tháng
+              </button>
+              <button
+                onClick={() => setViewMode('week')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
+                  viewMode === 'week' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                <Rows3 className="w-4 h-4" />
+                Tuần
+              </button>
+            </div>
+          </div>
+          <p className="text-gray-500 mt-2">Quản lý thời gian và các mốc hoàn thành công việc</p>
         </div>
         <div className="flex items-center gap-4 bg-white p-2 rounded-xl shadow-sm border border-gray-100">
           <Button variant="ghost" size="icon" onClick={prevMonth} className="hover:bg-indigo-50">
@@ -166,66 +198,70 @@ export default function CalendarPage() {
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="text-lg font-semibold min-w-[160px] text-center text-indigo-900 capitalize hover:bg-indigo-50 rounded-lg px-3 py-1.5 transition-colors"
-                title="Chọn tháng"
+                className="text-lg font-semibold min-w-[200px] text-center text-indigo-900 capitalize hover:bg-indigo-50 rounded-lg px-3 py-1.5 transition-colors"
+                title={viewMode === 'month' ? "Chọn tháng" : "Tuần hiện tại"}
               >
-                {format(currentDate, 'MMMM yyyy', { locale: vi })}
+                {viewMode === 'month' 
+                  ? format(currentDate, 'MMMM yyyy', { locale: vi })
+                  : `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`}
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-[320px] p-4" align="center" sideOffset={8}>
-              <div className="flex  gap-3">
-                <div className="flex-1 flex-col items-start">
-                  <div className="text-[11px] font-bold text-slate-500 uppercase mb-1">
-                    Tháng
+            {viewMode === 'month' && (
+              <PopoverContent className="w-[320px] p-4" align="center" sideOffset={8}>
+                <div className="flex  gap-3">
+                  <div className="flex-1 flex-col items-start">
+                    <div className="text-[11px] font-bold text-slate-500 uppercase mb-1">
+                      Tháng
+                    </div>
+                    <select
+                      className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40"
+                      value={monthInput}
+                      onChange={(e) => setMonthInput(Number(e.target.value))}
+                    >
+                      {Array.from({ length: 12 }).map((_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {i + 1}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <select
-                    className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40"
-                    value={monthInput}
-                    onChange={(e) => setMonthInput(Number(e.target.value))}
-                  >
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {i + 1}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex-1">
+                    <div className="text-[11px] font-bold text-slate-500 uppercase mb-1">
+                      Năm
+                    </div>
+                    <Input
+                      type="number"
+                      min={minYear}
+                      max={maxYear}
+                      value={yearInput}
+                      onChange={(e) => setYearInput(e.target.value)}
+                      onBlur={() => {
+                        const year = Math.min(maxYear, Math.max(minYear, Number(yearInput) || currentYear));
+                        setYearInput(year);
+                      }}
+                    />
+                    <div className="text-[10px] text-slate-400 mt-1">
+                      {minYear} - {maxYear}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <div className="text-[11px] font-bold text-slate-500 uppercase mb-1">
-                    Năm
-                  </div>
-                  <Input
-                    type="number"
-                    min={minYear}
-                    max={maxYear}
-                    value={yearInput}
-                    onChange={(e) => setYearInput(e.target.value)}
-                    onBlur={() => {
-                      const year = Math.min(maxYear, Math.max(minYear, Number(yearInput) || currentYear));
-                      setYearInput(year);
-                    }}
-                  />
-                  <div className="text-[10px] text-slate-400 mt-1">
-                    {minYear} - {maxYear}
-                  </div>
-                </div>
-              </div>
 
-              <div className="mt-4 flex justify-end gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsMonthPickerOpen(false)}
-                >
-                  Huỷ
-                </Button>
-                <Button
-                  onClick={applyMonthYear}
-                  className="bg-indigo-600 hover:bg-indigo-700"
-                >
-                  Áp dụng
-                </Button>
-              </div>
-            </PopoverContent>
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setIsMonthPickerOpen(false)}
+                  >
+                    Huỷ
+                  </Button>
+                  <Button
+                    onClick={applyMonthYear}
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    Áp dụng
+                  </Button>
+                </div>
+              </PopoverContent>
+            )}
           </Popover>
           <Button variant="ghost" size="icon" onClick={nextMonth} className="hover:bg-indigo-50">
             <ChevronRight className="w-5 h-5 text-gray-600" />
@@ -253,13 +289,13 @@ export default function CalendarPage() {
               </div>
             )}
 
-            <div className="h-full grid grid-cols-7 grid-rows-6">
+            <div className={`h-full grid grid-cols-7 ${viewMode === 'month' ? 'grid-rows-6' : 'grid-rows-1'}`}>
             {days.map((day, dayIdx) => {
               const dateTasks = getTasksForDay(day);
               const isCurrentMonth = isSameMonth(day, monthStart);
               const isDateToday = isToday(day);
-              const previewTasks = dateTasks.slice(0, 3);
-              const remainingCount = Math.max(0, dateTasks.length - previewTasks.length);
+              const previewTasks = viewMode === 'week' ? dateTasks : dateTasks.slice(0, 3);
+              const remainingCount = viewMode === 'week' ? 0 : Math.max(0, dateTasks.length - previewTasks.length);
 
               return (
                 <div 
@@ -308,7 +344,7 @@ export default function CalendarPage() {
                     </div>
                   </div>
                   
-                  <div className="space-y-1 overflow-hidden">
+                  <div className={`space-y-1.5 ${viewMode === 'month' ? 'overflow-hidden' : 'overflow-y-auto max-h-[calc(100%-40px)] custom-scrollbar pr-1'}`}>
                     {previewTasks.map(task => {
                       const isDone = task.status === 'DONE';
                       const isOverdue = task.is_overdue && !isDone;
