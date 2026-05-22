@@ -1,9 +1,8 @@
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from jose import jwt, JWTError
 
-from app.core.config import settings
+from app.core.security import decode_access_token
 
 class AuthMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, exclude_paths: list = None):
@@ -46,16 +45,15 @@ class AuthMiddleware(BaseHTTPMiddleware):
             )
         
         token = parts[1]
-        try:
-            # Decode the JWT token to ensure it is valid
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-            # Attach the user id (sub) to request state so downstream can use it if needed
-            request.state.user_email = payload.get("sub")
-        except JWTError:
+        payload = decode_access_token(token)
+        if payload is None:
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 content={"detail": "Could not validate credentials"}
             )
+
+        # Attach the user email to request state so downstream can use it
+        request.state.user_email = payload.get("sub")
         
         response = await call_next(request)
         return response

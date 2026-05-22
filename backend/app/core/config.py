@@ -12,9 +12,6 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field("your-super-secret-key-change-in-production", description="Secret key for JWT")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
-
-    # Google Auth Settings
-    GOOGLE_CLIENT_ID: str = Field(..., description="Google OAuth Client ID")
     
     FRONTEND_URL: str = Field("http://localhost:5173", description="Frontend application URL")
     
@@ -63,6 +60,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
+        extra="ignore"
     )
 
 settings = Settings()
