@@ -8,19 +8,22 @@ Endpoints:
     POST /auth/logout    – (Client-side) logout placeholder.
 """
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 
-from app.core.security import create_access_token
+from app.core.security import create_access_token, get_password_hash, decode_access_token
+from datetime import timedelta
 from app.api.deps import get_db, get_current_user
 from app.models.user import User
 from app.schemas.user import UserUpdate, UserResponse
-from app.schemas.auth import LoginRequest, RegisterRequest, Token
+from app.schemas.auth import LoginRequest, RegisterRequest, Token, ForgotPasswordRequest, ResetPasswordRequest
 from app.services.auth_service import (
     authenticate_user,
     register_user,
     update_user_streak,
 )
+
+from app.services.email import send_password_reset_email
 
 import logging
 
@@ -79,6 +82,60 @@ def login(body: LoginRequest, db: Session = Depends(get_db)) -> Any:
     access_token = create_access_token(subject=user.email)
     return Token(access_token=access_token)
 
+
+
+# ------------------------------------------------------------------ #
+#  Password Reset                                                     #
+# ------------------------------------------------------------------ #
+
+@router.post("/forgot-password")
+def forgot_password(
+    body: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+) -> Any:
+    user = db.query(User).filter(User.email == body.email).first()
+    if not user:
+        # Avoid giving away if the user exists or not for security reasons
+        return {"message": "Nếu email tồn tại trong hệ thống, chúng tôi đã gửi thư khôi phục mật khẩu."}
+    
+    # Generate a short-lived token (15 mins)
+    expires_delta = timedelta(minutes=15)
+    reset_token = create_access_token(subject=user.email, expires_delta=expires_delta)
+    
+    # Add email task to background
+    background_tasks.add_task(send_password_reset_email, user.email, reset_token)
+    
+    return {"message": "Nếu email tồn tại trong hệ thống, chúng tôi đã gửi thư khôi phục mật khẩu."}
+
+
+@router.post("/reset-password")
+def reset_password(
+    body: ResetPasswordRequest,
+    db: Session = Depends(get_db)
+) -> Any:
+    # Decode token
+    payload = decode_access_token(body.token)
+    if not payload or not payload.get("sub"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token không hợp lệ hoặc đã hết hạn."
+        )
+        
+    email = payload.get("sub")
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tài khoản không tồn tại."
+        )
+        
+    # Hash new password
+    user.password_hash = get_password_hash(body.new_password)
+    db.add(user)
+    db.commit()
+    
+    return {"message": "Mật khẩu đã được đặt lại thành công."}
 
 # ------------------------------------------------------------------ #
 #  Profile                                                            #

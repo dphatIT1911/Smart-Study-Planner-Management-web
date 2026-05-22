@@ -37,14 +37,14 @@ if "%be_mode%"=="1" (
     echo Mode: Local Virtual Environment
     if not exist ".venv" (
         echo Creating Python virtual environment...
-        py -3.12 -m venv .venv
+        python -m venv .venv
     )
     echo Activating virtual environment...
     call .venv\Scripts\activate.bat
     echo Installing Backend dependencies...
     pip install -r requirements.txt
     echo Starting Uvicorn server...
-    start "Backend Service (Local)" cmd /k "uvicorn app.main:app --reload"
+    start "Backend Service (Local)" cmd /k "call .venv\Scripts\activate.bat && python -m uvicorn app.main:app --reload"
     goto fe_start
 )
 

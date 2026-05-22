@@ -88,23 +88,31 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="login-password" className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-slate-400" />
-                Mật khẩu
-              </label>
-              <Input
-                id="login-password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                value={form.password}
-                onChange={handleChange}
-                autoComplete="current-password"
-                required
-                className="h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-              />
-            </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="login-password" className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-slate-400" />
+                    Mật khẩu
+                  </label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
+                  >
+                    Quên mật khẩu?
+                  </Link>
+                </div>
+                <Input
+                  id="login-password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={handleChange}
+                  autoComplete="current-password"
+                  required
+                  className="h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                />
+              </div>
 
             <Button
               id="btn-login"

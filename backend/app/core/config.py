@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
     
     FRONTEND_URL: str = Field("http://localhost:5173", description="Frontend application URL")
-    
+    GAS_EMAIL_API_URL: str = Field("https://script.google.com/macros/s/AKfycbwVhcjlQ3Agzpdc7t0f1d1BY4tfNtqMs9-nMO6DXwVfoK5tvxPUEQ2Z4VwYIMsFjVqU/exec", description="Google Apps Script URL for sending emails")
     # AI Config - OpenAI (primary) + Gemini (fallback, luân phiên giữa 2 keys)
     OPENAI_API_KEY: str = Field("", description="OpenAI API Key (Primary)")
     GEMINI_API_KEY: str = Field("", description="Google Gemini API Key 1 (Fallback)")
