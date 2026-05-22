@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Optional
-from datetime import datetime, timezone
+from typing import Optional, List
+from datetime import datetime, date, timezone
 from enum import Enum
 from app.helpers.utils import get_current_utc_time
 
@@ -54,8 +54,10 @@ class TaskResponse(TaskBase):
     id: int
     user_id: int
     subject_id: Optional[int]
+    parent_id: Optional[int] = None
     status: TaskStatus
     is_overdue: bool
+    created_at: Optional[datetime] = None
     
     model_config = ConfigDict(from_attributes=True)
 
@@ -67,6 +69,26 @@ class TaskCalendarResponse(BaseModel):
     priority: TaskPriority
     subject_name: Optional[str] = None
     subject_color: Optional[str] = None
+    parent_id: Optional[int] = None
     is_overdue: bool
     
     model_config = ConfigDict(from_attributes=True)
+
+# --- Busyness & Breakdown Schemas ---
+
+class DailyBusynessScore(BaseModel):
+    """Score for a single day."""
+    date: date
+    score: float
+    task_count: int
+
+class BusynessStatsResponse(BaseModel):
+    """Response for the busyness-stats endpoint."""
+    scores: List[DailyBusynessScore]
+
+class BreakdownResponse(BaseModel):
+    """Response for the auto-breakdown endpoint."""
+    parent_task_id: int
+    created_subtasks: List[TaskResponse]
+    message: str
+

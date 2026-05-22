@@ -9,8 +9,13 @@ export default function MainLayout() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
+
+    // Both token AND user data must exist — otherwise redirect to login
+    if (!token || !storedUser) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       navigate('/login');
     } else {
       setUser(JSON.parse(storedUser));

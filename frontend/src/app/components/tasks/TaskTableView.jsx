@@ -37,16 +37,17 @@ export default function TaskTableView({ tasks, onTaskClick, onStartTimer, onTask
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-y-auto h-full scrollbar-thin">
       <Table>
-        <TableHeader className="bg-slate-50 border-b border-slate-200">
+        <TableHeader className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+
           <TableRow className="hover:bg-transparent">
-            <TableHead className="font-semibold text-slate-700 text-center">Công việc</TableHead>
-            <TableHead className="font-semibold text-slate-700">Môn học</TableHead>
-            <TableHead className="font-semibold text-slate-700">Thời hạn</TableHead>
-            <TableHead className="font-semibold text-slate-700">Độ ưu tiên</TableHead>
-            <TableHead className="font-semibold text-slate-700">Trạng thái</TableHead>
-            <TableHead className="font-semibold text-slate-700 text-center">Hành động</TableHead>
+            <TableHead className="font-semibold text-slate-700 text-center sticky top-0 bg-slate-50 z-10">Công việc</TableHead>
+            <TableHead className="font-semibold text-slate-700 sticky top-0 bg-slate-50 z-10">Môn học</TableHead>
+            <TableHead className="font-semibold text-slate-700 sticky top-0 bg-slate-50 z-10">Thời hạn</TableHead>
+            <TableHead className="font-semibold text-slate-700 sticky top-0 bg-slate-50 z-10">Độ ưu tiên</TableHead>
+            <TableHead className="font-semibold text-slate-700 sticky top-0 bg-slate-50 z-10">Trạng thái</TableHead>
+            <TableHead className="font-semibold text-slate-700 text-center sticky top-0 bg-slate-50 z-10">Hành động</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

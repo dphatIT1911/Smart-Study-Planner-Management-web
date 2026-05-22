@@ -1,11 +1,14 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, date
 
 from app.api.deps import get_db, get_current_user
 from app.models.user import User
-from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskStatus, TaskCalendarResponse
+from app.schemas.task import (
+    TaskCreate, TaskUpdate, TaskResponse, TaskStatus,
+    TaskCalendarResponse, BusynessStatsResponse, DailyBusynessScore, BreakdownResponse
+)
 from app.services.task import task_service
 
 router = APIRouter()
@@ -61,10 +64,75 @@ def get_calendar(
                 priority=task.priority,
                 subject_name=task.subject.name if task.subject else None,
                 subject_color=task.subject.color if task.subject else None,
+                parent_id=task.parent_id,
                 is_overdue=task_service.is_overdue(task)
             )
         )
     return responses
+
+# ------------------------------------------------------------------ #
+#  Busyness Stats & Auto-Breakdown endpoints                          #
+#  NOTE: These MUST come before /{id} to avoid FastAPI path conflicts #
+# ------------------------------------------------------------------ #
+
+@router.get("/busyness-stats", response_model=BusynessStatsResponse)
+def get_busyness_stats(
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Get daily busyness scores for a date range.
+    Each day's score is calculated using:
+        Task_Score = (Priority_Weight × Status_Weight) × (1 + Credits / 10)
+    """
+    if end_date < start_date:
+        raise HTTPException(
+            status_code=400,
+            detail="end_date must be on or after start_date"
+        )
+    raw = task_service.get_busyness_stats(
+        db, user_id=current_user.id, start_date=start_date, end_date=end_date
+    )
+    return BusynessStatsResponse(
+        scores=[DailyBusynessScore(**item) for item in raw]
+    )
+
+@router.post("/{id}/breakdown", response_model=BreakdownResponse)
+def breakdown_task(
+    *,
+    db: Session = Depends(get_db),
+    id: int,
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Auto-breakdown a task into sub-tasks distributed across non-busy days.
+    """
+    try:
+        result = task_service.auto_breakdown_task(
+            db, task_id=id, user_id=current_user.id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+
+    # Attach is_overdue to each sub-task for serialization
+    subtasks_with_overdue = []
+    for st in result["created_subtasks"]:
+        st.is_overdue = task_service.is_overdue(st)
+        subtasks_with_overdue.append(st)
+
+    return BreakdownResponse(
+        parent_task_id=result["parent_task_id"],
+        created_subtasks=subtasks_with_overdue,
+        message=result["message"],
+    )
+
+# ------------------------------------------------------------------ #
+#  Standard CRUD endpoints                                            #
+# ------------------------------------------------------------------ #
 
 @router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(
@@ -140,3 +208,4 @@ def delete_task(
     task = task_service.remove(db=db, id=id)
     task.is_overdue = task_service.is_overdue(task)
     return task
+
