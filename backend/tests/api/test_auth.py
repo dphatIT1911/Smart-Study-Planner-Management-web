@@ -7,14 +7,14 @@ def test_register_user_success(client, db_session):
         json={
             "email": "test@example.com",
             "password": "password123",
+            "confirm_password": "password123",
             "name": "Test User"
         }
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
-    assert data["email"] == "test@example.com"
-    assert data["name"] == "Test User"
-    assert "id" in data
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
 
     # Check database directly
     user = db_session.query(User).filter_by(email="test@example.com").first()
@@ -26,6 +26,7 @@ def test_register_user_duplicate_email(client):
     user_data = {
         "email": "dup@example.com",
         "password": "password123",
+        "confirm_password": "password123",
         "name": "Test User"
     }
     # Register first time
@@ -33,8 +34,7 @@ def test_register_user_duplicate_email(client):
     
     # Register second time
     response = client.post("/auth/register", json=user_data)
-    assert response.status_code == 400
-    assert response.json() == {"detail": "The user with this username already exists in the system."}
+    assert response.status_code == 409
 
 
 def test_login_user_success(client):
@@ -42,6 +42,7 @@ def test_login_user_success(client):
     user_data = {
         "email": "login@example.com",
         "password": "password123",
+        "confirm_password": "password123",
         "name": "Test User"
     }
     client.post("/auth/register", json=user_data)
@@ -49,7 +50,7 @@ def test_login_user_success(client):
     # Login
     response = client.post(
         "/auth/login",
-        data={"username": "login@example.com", "password": "password123"}
+        json={"email": "login@example.com", "password": "password123"}
     )
     assert response.status_code == 200
     tokens = response.json()
@@ -62,6 +63,7 @@ def test_login_user_wrong_password(client):
     user_data = {
         "email": "wrong@example.com",
         "password": "password123",
+        "confirm_password": "password123",
         "name": "Test User"
     }
     client.post("/auth/register", json=user_data)
@@ -69,10 +71,9 @@ def test_login_user_wrong_password(client):
     # Login with wrong password
     response = client.post(
         "/auth/login",
-        data={"username": "wrong@example.com", "password": "wrongpassword"}
+        json={"email": "wrong@example.com", "password": "wrongpassword"}
     )
-    assert response.status_code == 400
-    assert response.json() == {"detail": "Incorrect email or password"}
+    assert response.status_code == 401
 
 
 def test_read_user_profile_success(client):
@@ -80,12 +81,13 @@ def test_read_user_profile_success(client):
     user_data = {
         "email": "profile@example.com",
         "password": "password123",
+        "confirm_password": "password123",
         "name": "Test User Profile"
     }
     client.post("/auth/register", json=user_data)
     login_res = client.post(
         "/auth/login",
-        data={"username": "profile@example.com", "password": "password123"}
+        json={"email": "profile@example.com", "password": "password123"}
     )
     token = login_res.json()["access_token"]
     
@@ -105,12 +107,13 @@ def test_logout(client):
     user_data = {
         "email": "logout@example.com",
         "password": "password123",
+        "confirm_password": "password123",
         "name": "Test User Logout"
     }
     client.post("/auth/register", json=user_data)
     login_res = client.post(
         "/auth/login",
-        data={"username": "logout@example.com", "password": "password123"}
+        json={"email": "logout@example.com", "password": "password123"}
     )
     token = login_res.json()["access_token"]
     

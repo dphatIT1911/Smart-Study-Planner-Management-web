@@ -50,3 +50,36 @@ def client(db_session):
         
     # Clean up
     app.dependency_overrides.clear()
+
+# --- Common Fixtures ---
+
+@pytest.fixture
+def auth_headers(client):
+    client.post(
+        "/auth/register",
+        json={"email": "tc_user@example.com", "password": "Secure123", "confirm_password": "Secure123", "name": "TC Tester"}
+    )
+    login = client.post(
+        "/auth/login",
+        json={"email": "tc_user@example.com", "password": "Secure123"}
+    )
+    token = login.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+@pytest.fixture
+def user_id(client, auth_headers):
+    profile = client.get("/auth/profile", headers=auth_headers)
+    return profile.json()["id"]
+
+@pytest.fixture
+def subject_id(client, auth_headers, user_id):
+    data = {
+        "name": "Toán Rời Rạc",
+        "semester": "Fall 2026",
+        "credits": 3,
+        "target_score": 8.5,
+        "color": "#667eea",
+        "user_id": user_id,
+    }
+    res = client.post("/subjects/", json=data, headers=auth_headers)
+    return res.json()["id"]

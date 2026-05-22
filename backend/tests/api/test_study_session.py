@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.models.task import Task
 from app.models.study_session import StudySession
 
@@ -8,13 +8,17 @@ def auth_headers(client):
     user_data = {
         "email": "session_tester@example.com",
         "password": "password123",
+        "confirm_password": "password123",
         "name": "Session Tester"
     }
     try:
         client.post("/auth/register", json=user_data)
     except Exception:
         pass
-    response = client.post("/auth/login", data={"username": "session_tester@example.com", "password": "password123"})
+    response = client.post(
+        "/auth/login",
+        json={"email": "session_tester@example.com", "password": "password123"}
+    )
     token = response.json().get("access_token")
     return {"Authorization": f"Bearer {token}"}
 
@@ -40,8 +44,8 @@ def test_create_study_session(client, db_session, auth_headers):
     # 3. Create StudySession payload
     payload = {
         "task_id": task.id,
-        "start_time": (datetime.utcnow() - timedelta(minutes=25)).isoformat(),
-        "end_time": datetime.utcnow().isoformat(),
+        "start_time": (datetime.now(timezone.utc) - timedelta(minutes=25)).isoformat(),
+        "end_time": datetime.now(timezone.utc).isoformat(),
         "duration_minutes": 25
     }
 
@@ -65,8 +69,8 @@ def test_create_study_session(client, db_session, auth_headers):
 def test_create_study_session_exceed_limit(client, auth_headers):
     payload = {
         "task_id": 999,
-        "start_time": (datetime.utcnow() - timedelta(minutes=250)).isoformat(),
-        "end_time": datetime.utcnow().isoformat(),
+        "start_time": (datetime.now(timezone.utc) - timedelta(minutes=250)).isoformat(),
+        "end_time": datetime.now(timezone.utc).isoformat(),
         "duration_minutes": 250
     }
     response = client.post(
@@ -81,8 +85,8 @@ def test_unauthorized_task_session(client, auth_headers):
     # Payload valid but task does not belong to user (or doesn't exist)
     payload = {
         "task_id": 9999, 
-        "start_time": (datetime.utcnow() - timedelta(minutes=30)).isoformat(),
-        "end_time": datetime.utcnow().isoformat(),
+        "start_time": (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat(),
+        "end_time": datetime.now(timezone.utc).isoformat(),
         "duration_minutes": 30
     }
     response = client.post(
@@ -92,4 +96,3 @@ def test_unauthorized_task_session(client, auth_headers):
     )
     assert response.status_code == 404
     assert "Task not found" in response.json()["detail"]
-

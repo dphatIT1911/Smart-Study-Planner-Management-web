@@ -27,8 +27,8 @@ def test_protected_route_invalid_token(client):
         "/auth/profile",
         headers={"Authorization": "Bearer invalid_token_xyz"}
     )
-    # deps.get_current_user raises 403 when JWT decode fails
-    assert response.status_code == 403
+    # deps.get_current_user raises 401 when JWT decode fails
+    assert response.status_code == 401
     assert response.json() == {"detail": "Could not validate credentials"}
 
 

@@ -105,7 +105,7 @@ vào Task tương ứng.
 
 \#\#\#\# Nhóm SHOULD-HAVE:  
 \- \*\*Dashboard Thống kê:\*\* Trực quan hóa dữ liệu học tập. Cung cấp biểu đồ so sánh giữa \*Thời gian dự kiến\* và \*Thời gian thực tế\* đã dành cho từng môn học.  
-\- \*\*Hệ thống Nhắc nhở:\*\* Gửi thông báo (In-app hoặc Email) trước khi tới Due date 1 ngày và 1 giờ.
+\- \*\*Hệ thống Nhắc nhở:\*\* Gửi thông báo (In-app) trước khi tới Due date 1 ngày.
 
 \#\#\#\# Nhóm COULD-HAVE:  
 \- \*\*Auto-Breakdown:\*\* Tính năng tự động chia 1 Task lớn (VD: Ôn thi cuối kỳ) thành các Task nhỏ bám sát trục thời gian bằng các rule cơ bản.  
@@ -202,9 +202,6 @@ graph TD
     subgraph Data\_Tier \["Database"\]  
         E \--\> |Truy vấn & Lưu trữ| G\["Cơ sở dữ liệu\<br/\>PostgreSQL"\]:::database  
         F \--\> G  
-    end  
-    subgraph External\_Services \["Dịch vụ mở rộng"\]  
-        E \-. "Lên lịch gửi thông báo" .-\> H\["Email Service\<br/\>SendGrid / Nodemailer"\]:::external  
     end  
 \`\`\`  
 \---

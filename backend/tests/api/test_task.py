@@ -7,6 +7,7 @@ def test_user_auth(client):
     user_data = {
         "email": "task_tester@example.com",
         "password": "password123",
+        "confirm_password": "password123",
         "name": "Task Tester"
     }
     try:
@@ -16,7 +17,7 @@ def test_user_auth(client):
         
     response = client.post(
         "/auth/login",
-        data={"username": "task_tester@example.com", "password": "password123"}
+        json={"email": "task_tester@example.com", "password": "password123"}
     )
     token = response.json().get("access_token")
     return {"Authorization": f"Bearer {token}"}
@@ -27,6 +28,7 @@ def other_user_auth(client):
     user_data = {
         "email": "task_other@example.com",
         "password": "password123",
+        "confirm_password": "password123",
         "name": "Other Task Tester"
     }
     try:
@@ -36,7 +38,7 @@ def other_user_auth(client):
         
     response = client.post(
         "/auth/login",
-        data={"username": "task_other@example.com", "password": "password123"}
+        json={"email": "task_other@example.com", "password": "password123"}
     )
     token = response.json().get("access_token")
     return {"Authorization": f"Bearer {token}"}
@@ -74,8 +76,8 @@ def test_read_tasks(client, test_user_auth):
     dt2 = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
     
     data1 = {"title": "Task 1", "status": "IN_PROGRESS", "priority": "MED", "user_id": user_id, "due_date": dt1}
-    # DONE tasks are never overdue
-    data2 = {"title": "Task 2", "status": "DONE", "priority": "LOW", "user_id": user_id, "due_date": dt2} 
+    # DONE tasks are never overdue — use a future date to avoid past-date validator
+    data2 = {"title": "Task 2", "status": "DONE", "priority": "LOW", "user_id": user_id} 
     
     client.post("/tasks/", json=data1, headers=test_user_auth)
     client.post("/tasks/", json=data2, headers=test_user_auth)

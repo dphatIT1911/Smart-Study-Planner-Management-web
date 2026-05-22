@@ -6,6 +6,7 @@ def auth_headers(client):
     user_data = {
         "email": "subject_tester@example.com",
         "password": "password123",
+        "confirm_password": "password123",
         "name": "Subject Tester"
     }
     # Register user (ignore error if already exists)
@@ -17,7 +18,7 @@ def auth_headers(client):
     # Login
     response = client.post(
         "/auth/login",
-        data={"username": "subject_tester@example.com", "password": "password123"}
+        json={"email": "subject_tester@example.com", "password": "password123"}
     )
     token = response.json().get("access_token")
     return {"Authorization": f"Bearer {token}"}
@@ -28,6 +29,7 @@ def other_auth_headers(client):
     user_data = {
         "email": "other_tester@example.com",
         "password": "password123",
+        "confirm_password": "password123",
         "name": "Other Tester"
     }
     try:
@@ -37,7 +39,7 @@ def other_auth_headers(client):
         
     response = client.post(
         "/auth/login",
-        data={"username": "other_tester@example.com", "password": "password123"}
+        json={"email": "other_tester@example.com", "password": "password123"}
     )
     token = response.json().get("access_token")
     return {"Authorization": f"Bearer {token}"}
