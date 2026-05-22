@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session, joinedload
 from app.models.task import Task, TaskStatus
 from app.models.notification import Notification
+from app.services.email import send_deadline_email
 import logging
 
 logger = logging.getLogger(__name__)
@@ -52,10 +53,23 @@ class NotificationService:
                 )
                 db.add(notification)
                 
+                # Send email notification
+                user_email = task.user.email if task.user else None
+                if user_email:
+                    user_name = task.user.name or "Bạn"
+                    subject_name = task.subject.name if task.subject else "Công việc cá nhân"
+                    await send_deadline_email(
+                        email=user_email,
+                        user_name=user_name,
+                        task_title=task.title,
+                        due_date=time_str,
+                        subject_name=subject_name
+                    )
+                
                 # Mark as sent
                 task.reminder_sent = True
                 db.add(task)
-                logger.info(f"Created notification for task: {task.title}")
+                logger.info(f"Created notification and sent email for task: {task.title}")
                 
             except Exception as e:
                 logger.error(f"Failed to create notification for task {task.id}: {str(e)}")

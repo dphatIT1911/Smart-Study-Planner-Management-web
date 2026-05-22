@@ -6,6 +6,7 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
   const dropdownRef = useRef(null);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
@@ -128,7 +129,10 @@ export default function NotificationBell() {
                   className={`px-4 py-3 border-b border-gray-50 flex gap-3 items-start transition-colors cursor-pointer hover:bg-gray-50 ${
                     n.is_read ? 'opacity-60' : 'bg-indigo-50/30'
                   }`}
-                  onClick={() => !n.is_read && handleMarkAsRead(n.id)}
+                  onClick={() => {
+                    if (!n.is_read) handleMarkAsRead(n.id);
+                    setExpandedId(expandedId === n.id ? null : n.id);
+                  }}
                 >
                   {/* Icon */}
                   <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${n.is_read ? 'bg-gray-100' : 'bg-orange-100'}`}>
@@ -140,7 +144,7 @@ export default function NotificationBell() {
                     <p className={`text-sm font-medium ${n.is_read ? 'text-gray-600' : 'text-gray-900'}`}>
                       {n.title}
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
+                    <p className={`text-xs text-gray-500 mt-0.5 ${expandedId === n.id ? '' : 'line-clamp-2'}`}>{n.message}</p>
                     <p className="text-xs text-gray-400 mt-1">{formatTime(n.created_at)}</p>
                   </div>
 
