@@ -37,7 +37,7 @@ if "%be_mode%"=="1" (
     echo Mode: Local Virtual Environment
     if not exist ".venv" (
         echo Creating Python virtual environment...
-        python -m venv .venv
+        py -3.12 -m venv .venv
     )
     echo Activating virtual environment...
     call .venv\Scripts\activate.bat
@@ -73,7 +73,7 @@ if not exist "node_modules" (
     call npm install
 )
 echo Starting Frontend server...
-start "Frontend Service" cmd /c "npm run dev"
+start "Frontend Service" cmd /k "npm run dev"
 cd ..
 
 echo Waiting a few seconds for Frontend to initialize...
