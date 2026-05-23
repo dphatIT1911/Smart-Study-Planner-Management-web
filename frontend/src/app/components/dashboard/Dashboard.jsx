@@ -75,6 +75,13 @@ export default function Dashboard() {
 
         const activeSubs = Array.isArray(allSubjects) ? allSubjects.filter(s => !s.semester?.includes('(DONE)')) : [];
         
+        const subjectsWithProgress = activeSubs.map(subj => {
+          const subjTasks = Array.isArray(allTasks) ? allTasks.filter(t => t.subject_id === subj.id) : [];
+          if (subjTasks.length === 0) return { ...subj, progress: 0 };
+          const completed = subjTasks.filter(t => t.status === 'DONE').length;
+          return { ...subj, progress: Math.round((completed / subjTasks.length) * 100) };
+        });
+        
         setStats({
           totalStudyTime: totalMinutes,
           estimatedTime: estimatedMinutes,
@@ -82,7 +89,7 @@ export default function Dashboard() {
           activeSubjects: activeSubs.length
         });
 
-        setSubjects(activeSubs.slice(0, 4));
+        setSubjects(subjectsWithProgress.slice(0, 4));
 
         const safeParseDate = (dateStr) => {
           if (!dateStr) return null;
@@ -369,7 +376,7 @@ export default function Dashboard() {
                 semester={subject.semester}
                 color={subject.color}
                 targetScore={subject.target_score}
-                currentProgress={0} />
+                currentProgress={subject.progress || 0} />
             )}
           </div>
         )}
