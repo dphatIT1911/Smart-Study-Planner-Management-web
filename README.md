@@ -2,11 +2,37 @@
 
 A web-based study planner system that helps students manage subjects, schedules, tasks, and track study progress.
 
+## 🌐 Link Website đã Deploy
+Trang web đã được deploy chạy thực tế tại: **[https://smart-study-planner-management-web-sigma.vercel.app/](https://smart-study-planner-management-web-sigma.vercel.app/)**
+
+## 🔑 Tài khoản Test Demo
+Sử dụng tài khoản sau đây để đăng nhập và kiểm thử hệ thống dễ dàng (cả trên bản Deploy và bản Local):
+* **Email:** `vphat545@gmail.com`
+* **Mật khẩu (Password):** `12345678`
+
+*(💡 Khi chạy script cài đặt ở Local lần đầu, tài khoản này cùng với dữ liệu mẫu (mock data) bao gồm các môn học, công việc, lịch học và thông báo demo sẽ tự động được tạo sẵn trong cơ sở dữ liệu).*
+
+---
+
 ## 🚀 Hướng dẫn chạy Web (Local Development)
 
-Dự án này bao gồm 2 phần: **Backend** (FastAPI) và **Frontend** (React + Vite). Bạn cần khởi động cả hai để trang web hoạt động đầy đủ.
+Dự án này bao gồm 2 phần: **Backend** (FastAPI) và **Frontend** (React + Vite). Bạn có thể khởi chạy nhanh bằng script tự động hoặc khởi chạy thủ công.
 
-*(💡 **Mẹo:** Nếu bạn dùng Windows, bạn có thể click đúp vào file `start_project.bat` ở thư mục gốc để hệ thống tự động khởi chạy cả Frontend và Backend cùng lúc một cách nhanh chóng).*
+### Cách 1: Sử dụng Script chạy tự động (Khuyên dùng)
+Script tự động sẽ tự kiểm tra môi trường, tạo môi trường ảo Python, cài đặt tất cả các gói phụ thuộc (dependencies) của cả Backend và Frontend, chạy các file di cư database (database migrations), tự động tạo tài khoản test và seed dữ liệu mẫu, sau đó khởi chạy cả hai server cùng lúc và mở trình duyệt web.
+
+* **Trên Windows:**
+  Click đúp chuột vào file `start_project.bat` ở thư mục gốc của dự án.
+* **Trên macOS / Linux:**
+  Mở terminal tại thư mục gốc của dự án, cấp quyền thực thi và chạy script:
+  ```bash
+  chmod +x start_project.sh
+  ./start_project.sh
+  ```
+
+---
+
+### Cách 2: Khởi chạy thủ công từng bước
 
 Nếu muốn chạy thủ công, hãy thực hiện theo các bước sau:
 
@@ -28,7 +54,12 @@ Mở một terminal mới, sau đó:
    ```bash
    pip install -r requirements.txt
    ```
-5. Khởi động server (mặc định chạy ở `http://127.0.0.1:8000`):
+5. Chạy database migrations và seed tài khoản test/mock data:
+   ```bash
+   alembic upgrade head
+   python seed_mock_data.py
+   ```
+6. Khởi động server (mặc định chạy ở `http://127.0.0.1:8000`):
    ```bash
    uvicorn app.main:app --reload
    ```

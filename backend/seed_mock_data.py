@@ -11,6 +11,7 @@ from app.models.subject import Subject
 from app.models.task import Task, TaskStatus, TaskPriority
 from app.models.study_session import StudySession
 from app.models.notification import Notification
+from app.core.security import get_password_hash
 
 def seed_data():
     db = SessionLocal()
@@ -19,10 +20,19 @@ def seed_data():
         email = "vphat545@gmail.com"
         user = db.query(User).filter(User.email == email).first()
         if not user:
-            print(f"User {email} not found. Please register this email first.")
-            return
+            print(f"User {email} not found. Creating user with password '12345678'...")
+            user = User(
+                email=email,
+                password_hash=get_password_hash("12345678"),
+                name="Võ Đại Phát",
+                streak_count=5,
+                last_activity_date=datetime.now(timezone.utc),
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
 
-        print(f"Found user: {user.email}. Generating mock data...")
+        print(f"Found/created user: {user.email}. Generating mock data...")
 
         # 1. Update User Streak
         user.streak_count = 5
