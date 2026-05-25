@@ -162,7 +162,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto bg-slate-50 font-['Inter'] h-[calc(100vh-0px)] overflow-hidden flex flex-col gap-6">
+    <div className="p-6 max-w-7xl mx-auto bg-slate-50 font-['Inter'] h-[calc(100vh-theme(spacing.16))] overflow-hidden flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
